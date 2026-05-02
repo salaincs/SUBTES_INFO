@@ -13,14 +13,71 @@
     h1{color:#FFFFFF;font-size:36px;font-weight:900;letter-spacing:3px;text-transform:uppercase;}
     p{color:rgba(200,220,255,.6);font-size:14px;letter-spacing:1px;}
     .links{display:flex;flex-direction:column;gap:12px;margin-top:10px;width:300px;}
-    a{display:block;padding:14px 24px;text-align:center;text-decoration:none;
+    
+    /* Estilos Botones Principales */
+    .btn{display:block;padding:14px 24px;text-align:center;text-decoration:none;
       font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:14px;
-      border-radius:3px;transition:all .2s;}
+      border-radius:3px;transition:all .2s;cursor:pointer;}
     .a-slides{background:#F97316;color:#fff;}
     .a-slides:hover{background:#EA6A0C;}
     .a-dash{background:rgba(77,170,255,.1);color:#4DAAFF;
             border:1px solid rgba(77,170,255,.4);}
     .a-dash:hover{background:rgba(77,170,255,.2);}
+
+    /* Estilos del Desplegable (Dropdown) */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+      margin-top: 15px;
+    }
+    .dropbtn {
+      background: transparent;
+      color: rgba(255,255,255,0.5);
+      padding: 10px;
+      font-size: 13px;
+      border: 1px dashed rgba(255,255,255,0.2);
+      width: 100%;
+    }
+    .dropbtn:hover {
+      color: rgba(255,255,255,0.9);
+      border-color: rgba(255,255,255,0.5);
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #050C18;
+      min-width: 100%;
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
+      z-index: 1;
+      border: 1px solid rgba(77,170,255,.3);
+      border-radius: 3px;
+      margin-top: 5px;
+    }
+    .dropdown-content a {
+      color: rgba(200,220,255,.8);
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: 0.2s;
+    }
+    .dropdown-content a:last-child {
+      border-bottom: none;
+    }
+    .dropdown-content a:hover {
+      background-color: rgba(77,170,255,.15);
+      color: #FFF;
+      padding-left: 20px; /* Efecto de movimiento al pasar el mouse */
+    }
+    /* Mostrar menú al pasar el mouse */
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 </head>
@@ -28,15 +85,25 @@
   <img src="assets/logo.png" class="logo" alt="SalaIncs">
   <h1>SalaIncs</h1>
   <p>Ecosistema IoT Ferroviario · SBASE 2026</p>
+  
   <div class="links">
-    <a href="presentation.html" class="a-slides">sistemas disponibles</a>
-    <a href="dashboard.html" class="a-dash">Prueba Dashboard</a>
-    <a href="pdf/Monitoreo Ambiental y Confort_2.pdf" class="a-dash" download>PDF: Monitoreo Ambiental</a>
-    <a href="pdf/Telemetría y Posicionamiento.pdf" class="a-dash" download>PDF: Telemetría (Fusión)</a>
-    <a href="pdf/Eficiencia Operativa y Mantenimiento Predictivo (con IA).pdf" class="a-dash" download>PDF: Mantenimiento Predictivo</a>
-    <a href="pdf/Sistema Inteligente de Información al Pasajero a Bordo (PIS).pdf" class="a-dash" download>PDF: Sistema PIS a Bordo</a>
-    <a href="pdf/Visual activo para detección.pdf" class="a-dash" download>PDF: Detección de Caídas</a>
-    <a href="pdf/Ecosistema.pdf" class="a-dash" download>PDF: Ecosistema</a>
+    <!-- Botones Principales -->
+    <a href="presentation.html" class="btn a-slides">sistemas disponibles</a>
+    <a href="dashboard.html" class="btn a-dash">Prueba Dashboard</a>
+    
+    <!-- Menú Desplegable -->
+    <div class="dropdown">
+      <button class="btn dropbtn">DOCUMENTACIÓN TÉCNICA (PDF) ▼</button>
+      <div class="dropdown-content">
+        <a href="pdf/Monitoreo%20Ambiental%20y%20Confort.pdf" target="_blank" download>Monitoreo Ambiental</a>
+        <a href="pdf/Telemetría%20y%20Posicionamiento.pdf" target="_blank" download>Telemetría (Fusión)</a>
+        <a href="pdf/Eficiencia%20Operativa%20y%20Mantenimiento%20Predictivo%20(con%20IA).pdf" target="_blank" download>Mantenimiento Predictivo</a>
+        <a href="pdf/Sistema%20Inteligente%20de%20Información%20al%20Pasajero%20a%20Bordo%20(PIS).pdf" target="_blank" download>Sistema PIS a Bordo</a>
+        <a href="pdf/Visual%20activo%20para%20detección.pdf" target="_blank" download>Detección de Caídas</a>
+        <a href="pdf/Ecosistema.pdf" target="_blank" download>Ecosistema y Arquitectura</a>
+      </div>
+    </div>
   </div>
+
 </body>
 </html>
