@@ -162,6 +162,7 @@ h1 span,h2 span{color:var(--or);}
 
 
 /* ===== DASHBOARD CSS ===== */
+#dc-map-html{display:none;}
 .dc-tab{
   font-family:'Barlow Condensed',sans-serif;
   font-size:26px;font-weight:900;letter-spacing:2px;
@@ -274,7 +275,8 @@ h1 span,h2 span{color:var(--or);}
 
   /* Line tabs */
   #dc-line-tabs{gap:4px !important;flex-wrap:nowrap !important;overflow-x:auto;}
-  .dc-tab{font-size:15px !important;padding:6px 12px !important;flex-shrink:0;}
+  #dc-map-html{display:none;}
+.dc-tab{font-size:15px !important;padding:6px 12px !important;flex-shrink:0;}
 
   /* Main grid → full single column */
   #slide-dash > div > div > div:last-of-type{
@@ -364,7 +366,8 @@ h1 span,h2 span{color:var(--or);}
   .door-opening{height:200px !important;}
   #dc-canvas{height:160px !important;}
   #dc-metrics{grid-template-columns:repeat(2,1fr) !important;}
-  .dc-tab{font-size:12px !important; padding:4px 8px !important;}
+  #dc-map-html{display:none;}
+.dc-tab{font-size:12px !important; padding:4px 8px !important;}
 }
 
 </style>
@@ -1004,6 +1007,7 @@ h1 span,h2 span{color:var(--or);}
         <div style="flex:1;background:rgba(6,14,26,.92);border:1px solid rgba(30,50,80,.8);border-top:3px solid #4DAAFF;padding:10px 14px;position:relative;min-height:0;overflow:hidden;">
           <div id="dc-map-title" style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4DAAFF;margin-bottom:6px;"></div>
           <canvas id="dc-canvas" style="width:100%;display:block;"></canvas>
+          <div id="dc-map-html" style="display:none"></div>
         </div>
         <!-- METRICS -->
         <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;flex-shrink:0;" id="dc-metrics"></div>
@@ -1695,6 +1699,7 @@ function selectLine(k){
   buildTrainList(k);
   buildEnvList(k);
   buildMetrics(k);
+  buildHtmlMap(k);
   resizeCanvas();
 }
 
@@ -2046,6 +2051,7 @@ function loop(){
   if(!running){requestAnimationFrame(loop);return;}
   updateTrains();
   drawMap();
+  updateHtmlMap(selLine);
   requestAnimationFrame(loop);
 }
 
@@ -2060,6 +2066,42 @@ setInterval(()=>{
     running=false;
   }
 },500);
+
+function buildHtmlMap(k){
+  const el = document.getElementById('dc-map-html');
+  if(!el) return;
+  const L = LINES[k];
+  const ests = L.ests;
+  const n = ests.length;
+  const col = L.color;
+  const trains = fleet[k]||[];
+  let h = '<div class="dc-html-map"><div class="dc-html-track" id="dc-track-'+k+'" style="position:relative;height:80px;display:flex;align-items:center;min-width:'+(n*52)+'px;">';
+  h += '<div class="dc-html-rail" style="position:absolute;left:0;right:0;top:50%;height:5px;transform:translateY(-50%);border-radius:3px;background:linear-gradient(90deg,'+col+'33,'+col+'AA,'+col+'33)"></div>';
+  ests.forEach((name,i)=>{
+    const pct=(i/(n-1)*100).toFixed(1);
+    const isTerm=i===0||i===n-1;
+    const dotSize=isTerm?14:10;
+    h+='<div style="position:absolute;left:'+pct+'%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:2;">';
+    h+='<div style="width:'+dotSize+'px;height:'+dotSize+'px;border-radius:50%;'+(isTerm?'background:'+col+';':'background:#0D1827;border:2px solid '+col+';')+' flex-shrink:0;margin-bottom:2px;"></div>';
+    h+='<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:'+(isTerm?'800':'600')+';color:'+(isTerm?col:'rgba(200,220,255,.65)')+';white-space:nowrap;transform:rotate(-35deg) translateX(3px);transform-origin:top left;margin-top:4px;">'+name+'</div>';
+    h+='</div>';
+  });
+  trains.forEach(f=>{
+    const pct=(f.pos*100).toFixed(1);
+    h+='<div id="dc-htrain-'+f.id+'" style="position:absolute;left:'+pct+'%;transform:translateX(-50%) translateY(-50%);top:50%;z-index:3;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:900;color:#fff;background:'+col+';padding:2px 7px;border-radius:3px;transition:left 0.8s linear;white-space:nowrap;">'+f.id+'</div>';
+  });
+  h+='</div></div>';
+  el.innerHTML=h;
+}
+
+function updateHtmlMap(k){
+  const trains=fleet[k]||[];
+  trains.forEach(f=>{
+    const el=document.getElementById('dc-htrain-'+f.id);
+    if(el) el.style.left=(f.pos*100).toFixed(1)+'%';
+  });
+}
+
 
 window.addEventListener('resize',()=>{ if(dashReady) resizeCanvas(); });
 
