@@ -1,0 +1,332 @@
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   slides.css — Fullscreen presentation styles
+═══════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap');
+@import 'variables.css';
+
+/* ── Layout ────────────────────────────── */
+html, body { overflow: hidden; }
+
+#deck { position: fixed; inset: 0; }
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .7s ease;
+  overflow: hidden;
+}
+.slide.active { opacity: 1; pointer-events: auto; }
+
+/* Photo background */
+.slide-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.05);
+  transition: transform 8s ease-out;
+}
+.slide.active .slide-bg { transform: scale(1); }
+
+/* Dark overlay */
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    rgba(4,10,22,.97) 0%,
+    rgba(4,10,22,.88) 46%,
+    rgba(4,10,22,.42) 100%
+  );
+}
+
+/* Two-column grid */
+.slide-content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 42% 58%;
+  width: 100%;
+  height: 100%;
+}
+
+.slide-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 64px 52px 76px;
+}
+
+.slide-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px 60px 0;
+  overflow: visible;
+}
+
+/* ── Text elements ──────────────────────── */
+.slide-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--orange-light);
+  margin-bottom: 16px;
+  text-shadow: 0 2px 8px rgba(0,0,0,.7);
+}
+.slide-tag::before {
+  content: '';
+  width: 26px;
+  height: 2px;
+  background: var(--orange-light);
+}
+
+.slide-num {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(180,210,255,.85);
+  margin-bottom: 10px;
+  text-shadow: 0 1px 4px rgba(0,0,0,.7);
+}
+
+.slide-title {
+  font-size: clamp(42px, 4.5vw, 68px);
+  margin-bottom: 18px;
+}
+.slide-title span { color: var(--orange); }
+
+.slide-sub {
+  font-size: clamp(15px, 1.3vw, 18px);
+  max-width: 530px;
+  margin-bottom: 20px;
+}
+
+/* ── Spec grid ──────────────────────────── */
+.specs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.spec-item {
+  background: rgba(4,10,22,.88);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--orange-light);
+  padding: 12px 16px;
+  backdrop-filter: blur(6px);
+}
+.spec-item strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--orange-light);
+  margin-bottom: 3px;
+}
+.spec-item span {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ── Pills ──────────────────────────────── */
+.pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.pill {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid rgba(77,170,255,.5);
+  color: var(--accent2);
+  background: rgba(77,170,255,.12);
+}
+.pill.orange {
+  border-color: rgba(255,176,96,.6);
+  color: var(--orange-light);
+  background: rgba(249,115,22,.14);
+}
+
+/* ── Navigation ─────────────────────────── */
+#topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 60;
+  padding: 14px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(rgba(4,10,22,.82), transparent);
+  pointer-events: none;
+}
+.tb-logo { display: flex; align-items: center; gap: 10px; }
+.tb-logo img {
+  height: 36px; width: 36px;
+  object-fit: contain;
+}
+.tb-name {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,.8);
+}
+.tb-name em { color: var(--orange); font-style: normal; }
+.tb-info {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(180,210,255,.85);
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
+}
+
+.nav-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  width: 36px; height: 36px;
+  background: rgba(9,15,30,.35);
+  border: 1px solid rgba(30,48,80,.4);
+  color: rgba(240,244,250,.45);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .25s;
+  opacity: 0.4;
+  border-radius: 4px;
+  user-select: none;
+}
+.nav-arrow:hover {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+  opacity: 1;
+  width: 44px; height: 44px;
+  font-size: 19px;
+}
+#prev { left: 8px; }
+#next { right: 8px; }
+
+#dots {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(107,138,175,.45);
+  background: transparent;
+  cursor: pointer;
+  transition: all .25s;
+}
+.dot.active {
+  background: var(--orange);
+  border-color: var(--orange);
+  width: 22px;
+  border-radius: 4px;
+}
+.dot:hover:not(.active) { border-color: var(--accent); }
+
+/* ── Animations ─────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — MOBILE
+══════════════════════════════════════════ */
+@media (max-width: 860px) {
+  html, body { overflow-y: auto; overflow-x: hidden; }
+  #deck { position: relative; }
+  .slide {
+    position: relative;
+    min-height: 100vh;
+    opacity: 1;
+    pointer-events: auto;
+    display: none;
+    overflow: auto;
+  }
+  .slide.active { display: flex; }
+  .slide-bg, .slide-overlay { position: fixed; }
+
+  .slide-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .slide-left {
+    padding: 58px 18px 12px !important;
+    justify-content: flex-start;
+  }
+  .slide-title { font-size: clamp(26px, 6vw, 40px) !important; margin-bottom: 10px; }
+  .slide-sub {
+    font-size: 14px !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .slide-tag { font-size: 11px; margin-bottom: 10px; }
+  .specs { grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
+  .spec-item { padding: 8px 10px; }
+  .spec-item strong { font-size: 10px; }
+  .spec-item span { font-size: 13px; }
+
+  .slide-right {
+    padding: 4px 12px 50px !important;
+    align-items: flex-start;
+    overflow: visible;
+  }
+  .slide-right svg,
+  .slide-right canvas {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 40vh !important;
+  }
+  .spec-side { display: none !important; }
+
+  .nav-arrow { width: 34px; height: 34px; font-size: 14px; }
+  #prev { left: 4px; } #next { right: 4px; }
+  #topbar { padding: 8px 12px; }
+  .tb-name { font-size: 15px; }
+  .tb-info { font-size: 10px; }
+  .tb-logo img { height: 28px; width: 28px; }
+}
+
+@media (max-width: 520px) {
+  .slide-left { padding: 54px 12px 8px !important; }
+  .slide-title { font-size: clamp(22px, 5.5vw, 32px) !important; }
+  .slide-sub { -webkit-line-clamp: 3; }
+  .specs { gap: 4px; }
+  .slide-right svg,
+  .slide-right canvas { max-height: 34vh !important; }
+}
