@@ -3,108 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050C18">
   <title>SalaIncs · IoT Ferroviario</title>
-  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#050C18;font-family:'Barlow Condensed',sans-serif;
-         display:flex;align-items:center;justify-content:center;
-         min-height:100vh;flex-direction:column;gap:20px;}
-    .logo{width:140px;height:140px;object-fit:contain;}
-    h1{color:#FFFFFF;font-size:36px;font-weight:900;letter-spacing:3px;text-transform:uppercase;}
-    p{color:rgba(200,220,255,.6);font-size:14px;letter-spacing:1px;}
-    .links{display:flex;flex-direction:column;gap:12px;margin-top:10px;width:300px;}
-    
-    /* Estilos Botones Principales */
-    .btn{display:block;padding:14px 24px;text-align:center;text-decoration:none;
-      font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:14px;
-      border-radius:3px;transition:all .2s;cursor:pointer;}
-    .a-slides{background:#F97316;color:#fff;}
-    .a-slides:hover{background:#EA6A0C;}
-    .a-dash{background:rgba(77,170,255,.1);color:#4DAAFF;
-            border:1px solid rgba(77,170,255,.4);}
-    .a-dash:hover{background:rgba(77,170,255,.2);}
-
-    /* Estilos del Desplegable (Dropdown) */
-    .dropdown {
-      position: relative;
-      display: inline-block;
-      width: 100%;
-      margin-top: 15px;
-    }
-    .dropbtn {
-      background: transparent;
-      color: rgba(255,255,255,0.5);
-      padding: 10px;
-      font-size: 13px;
-      border: 1px dashed rgba(255,255,255,0.2);
-      width: 100%;
-    }
-    .dropbtn:hover {
-      color: rgba(255,255,255,0.9);
-      border-color: rgba(255,255,255,0.5);
-    }
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      background-color: #050C18;
-      min-width: 100%;
-      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.8);
-      z-index: 1;
-      border: 1px solid rgba(77,170,255,.3);
-      border-radius: 3px;
-      margin-top: 5px;
-    }
-    .dropdown-content a {
-      color: rgba(200,220,255,.8);
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: none;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      transition: 0.2s;
-    }
-    .dropdown-content a:last-child {
-      border-bottom: none;
-    }
-    .dropdown-content a:hover {
-      background-color: rgba(77,170,255,.15);
-      color: #FFF;
-      padding-left: 20px; /* Efecto de movimiento al pasar el mouse */
-    }
-    /* Mostrar menú al pasar el mouse */
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
+    html,body{width:100%;min-height:100vh;background:#050C18;
+      font-family:'Barlow Condensed',sans-serif;
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;gap:20px;padding:40px 20px;}
+    .logo{width:140px;height:140px;object-fit:contain;
+      filter:drop-shadow(0 0 24px rgba(26,74,138,.5));}
+    h1{color:#FFFFFF;font-size:36px;font-weight:900;
+      letter-spacing:3px;text-transform:uppercase;text-align:center;}
+    .sub{color:rgba(200,220,255,.55);font-size:13px;
+      letter-spacing:2px;text-transform:uppercase;text-align:center;}
+    .links{display:flex;flex-direction:column;gap:10px;width:min(340px,100%);}
+    .btn{display:flex;align-items:center;justify-content:center;gap:10px;
+      padding:16px 28px;text-decoration:none;font-weight:900;
+      letter-spacing:2px;text-transform:uppercase;font-size:15px;
+      border-radius:3px;transition:background .2s;font-family:'Barlow Condensed',sans-serif;
+      cursor:pointer;border:none;}
+    .btn-pres{background:#F97316;color:#fff;}
+    .btn-pres:hover{background:#EA6A0C;}
+    .btn-dash{background:rgba(77,170,255,.1);color:#4DAAFF;
+      border:1px solid rgba(77,170,255,.4);}
+    .btn-dash:hover{background:rgba(77,170,255,.2);}
+    /* PDF toggle button */
+    .btn-pdf{background:rgba(30,48,80,.5);color:rgba(200,220,255,.7);
+      border:1px solid rgba(30,48,80,.9);font-size:13px;width:min(340px,100%);}
+    .btn-pdf:hover{background:rgba(30,48,80,.8);}
+    .btn-pdf .arrow{transition:transform .25s;display:inline-block;margin-left:6px;}
+    .btn-pdf.open .arrow{transform:rotate(180deg);}
+    /* PDF list — hidden by default */
+    .pdf-list{display:flex;flex-direction:column;gap:6px;width:min(340px,100%);
+      overflow:hidden;max-height:0;transition:max-height .35s ease;}
+    .pdf-list.open{max-height:600px;}
+    .pdf-link{display:flex;align-items:center;gap:12px;padding:11px 14px;
+      background:rgba(9,16,28,.8);border:1px solid rgba(30,48,80,.7);
+      border-left:3px solid rgba(249,115,22,.5);text-decoration:none;
+      border-radius:2px;transition:background .2s,border-color .2s;}
+    .pdf-link:hover{background:rgba(249,115,22,.07);border-left-color:#F97316;}
+    .pdf-icon{font-size:18px;flex-shrink:0;}
+    .pdf-info{flex:1;min-width:0;}
+    .pdf-name{font-size:13px;font-weight:800;color:#F0F4FA;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .pdf-desc{font-size:11px;color:rgba(200,220,255,.45);
+      margin-top:2px;font-family:'Barlow',sans-serif;}
+    .pdf-dl{font-size:11px;font-weight:700;color:rgba(249,115,22,.6);
+      text-transform:uppercase;flex-shrink:0;}
+    .partner{display:flex;align-items:center;gap:12px;
+      padding:10px 16px;border:1px solid rgba(77,170,255,.2);
+      border-left:3px solid #4DAAFF;width:min(340px,100%);}
+    .partner-label{font-size:9px;font-weight:700;letter-spacing:2px;
+      text-transform:uppercase;color:rgba(200,220,255,.4);}
+    .partner-name{font-size:20px;font-weight:900;letter-spacing:2px;color:#4DAAFF;}
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 </head>
 <body>
-  <img src="assets/logo.svg" class="logo" alt="SalaIncs">
+  <img src="assets/logo.png" class="logo" alt="SalaIncs">
   <h1>SalaIncs</h1>
-  <p>Ecosistema IoT Ferroviario · SBASE 2026</p>
-  
+  <div class="sub">Ecosistema IoT Ferroviario · SBASE / EMOVA 2026</div>
+
   <div class="links">
-    <!-- Botones Principales -->
-    <a href="presentation.html" class="btn a-slides">sistemas disponibles</a>
-    <a href="dashboard.html" class="btn a-dash">Prueba Dashboard</a>
-    
-    <!-- Menú Desplegable -->
-    <div class="dropdown">
-      <button class="btn dropbtn">DOCUMENTACIÓN TÉCNICA (PDF) ▼</button>
-      <div class="dropdown-content">
-        <a href="pdf/Monitoreo%20Ambiental%20y%20Confort.pdf" target="_blank" download>Monitoreo Ambiental</a>
-        <a href="pdf/Telemetría%20y%20Posicionamiento.pdf" target="_blank" download>Telemetría (Fusión)</a>
-        <a href="pdf/Eficiencia%20Operativa%20y%20Mantenimiento%20Predictivo%20(con%20IA).pdf" target="_blank" download>Mantenimiento Predictivo</a>
-        <a href="pdf/Sistema%20Inteligente%20de%20Información%20al%20Pasajero%20a%20Bordo%20(PIS).pdf" target="_blank" download>Sistema PIS a Bordo</a>
-        <a href="pdf/Visual%20activo%20para%20detección.pdf" target="_blank" download>Detección de Caídas</a>
-        <a href="pdf/Ecosistema.pdf" target="_blank" download>Ecosistema y Arquitectura</a>
+    <a href="presentation.html" class="btn btn-pres">▶ Presentación Técnica</a>
+    <a href="dashboard.html"    class="btn btn-dash">⚡ Centro de Control</a>
+    <button class="btn btn-pdf" onclick="togglePdf(this)">
+      📄 Fichas Técnicas <span class="arrow">▾</span>
+    </button>
+  </div>
+
+  <div class="pdf-list" id="pdf-list">
+    <a href="assets/Ecosistema.pdf" download class="pdf-link">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">Ecosistema de Conectividad</div>
+        <div class="pdf-desc">Red híbrida · Control centralizado · Big Data</div>
       </div>
+      <div class="pdf-dl">↓ PDF</div>
+    </a>
+    <a href="assets/Telemetria_y_Posicionamiento.pdf" download class="pdf-link">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">Telemetría y Posicionamiento</div>
+        <div class="pdf-desc">Fusión inercial · Sin GPS · EKF en edge</div>
+      </div>
+      <div class="pdf-dl">↓ PDF</div>
+    </a>
+    <a href="assets/Sistema_PIS.pdf" download class="pdf-link">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">Sistema Smart PIS</div>
+        <div class="pdf-desc">Pantallas stretch · Información al pasajero</div>
+      </div>
+      <div class="pdf-dl">↓ PDF</div>
+    </a>
+    <a href="assets/Mantenimiento_Predictivo.pdf" download class="pdf-link">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">Mantenimiento Predictivo con IA</div>
+        <div class="pdf-desc">FFT · Machine Learning · Bogies y fuelles</div>
+      </div>
+      <div class="pdf-dl">↓ PDF</div>
+    </a>
+    <a href="assets/Visual_Deteccion_Caidas.pdf" download class="pdf-link">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">Visual Activo · Detección de Caídas</div>
+        <div class="pdf-desc">IA en andén · Edge AI · NVIDIA Jetson</div>
+      </div>
+      <div class="pdf-dl">↓ PDF</div>
+    </a>
+    <a href="assets/Monitoreo_Ambiental.pdf" download class="pdf-link">
+      <div class="pdf-icon">📄</div>
+      <div class="pdf-info">
+        <div class="pdf-name">Monitoreo Ambiental y Confort</div>
+        <div class="pdf-desc">CO₂ · VOC · Temp · HR · Big Data ambiental</div>
+      </div>
+      <div class="pdf-dl">↓ PDF</div>
+    </a>
+  </div>
+
+  <div class="partner">
+    <div>
+      <div class="partner-label">Socio Comercial</div>
+      <div class="partner-name">IoT Inmotion</div>
     </div>
   </div>
 
+  <script>
+    function togglePdf(btn) {
+      const list = document.getElementById('pdf-list');
+      list.classList.toggle('open');
+      btn.classList.toggle('open');
+    }
+  </script>
 </body>
 </html>
