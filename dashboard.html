@@ -97,7 +97,7 @@ html, body {
   flex-shrink: 0;
   z-index: 10;
 }
-.tb-logo {display:flex;align-items:center;gap:10px; display: flex; align-items: center; gap: 10px; }
+.tb-logo { display: flex; align-items: center; gap: 10px; }
 .tb-logo img { height: 32px; width: 32px; object-fit: contain; }
 .tb-name {
   font-size: 18px; font-weight: 900;
@@ -429,29 +429,177 @@ html, body {
   .metric-value { font-size: 24px; }
 }
 
-  
-/* ── Home button ── */
-.home-btn{
-  position:fixed;bottom:18px;right:18px;z-index:80;
-  width:44px;height:44px;
-  background:rgba(9,15,30,.85);
-  border:1px solid rgba(30,48,80,.8);
-  border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;text-decoration:none;
-  font-size:18px;
-  transition:all .2s;
-  backdrop-filter:blur(6px);
-  opacity:.65;
-}
-.home-btn:hover{
-  background:var(--or,#F97316);
-  border-color:var(--or,#F97316);
-  opacity:1;
-  transform:scale(1.08);
-}
 
+#chart-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(3,8,18,.95);flex-direction:column;padding:20px;gap:12px;}
+#chart-modal.open{display:flex;}
+#chart-header{display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;}
+#chart-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#fff;}
+#chart-sub{font-size:12px;color:rgba(200,220,255,.5);margin-top:4px;}
+#chart-close{width:40px;height:40px;background:rgba(30,48,80,.8);border:1px solid rgba(77,170,255,.3);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;flex-shrink:0;}
+#chart-close:hover{background:#FF4444;}
+#chart-wrap{flex:1;position:relative;background:rgba(6,14,26,.98);border:1px solid rgba(30,50,80,.8);border-radius:4px;overflow:hidden;cursor:crosshair;min-height:200px;}
+#chart-canvas{display:block;}
+#chart-hint{position:absolute;bottom:8px;right:12px;font-size:10px;color:rgba(200,220,255,.25);pointer-events:none;}
+#chart-bar{display:flex;gap:8px;flex-shrink:0;align-items:center;flex-wrap:wrap;}
+.cbtn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 16px;background:rgba(30,48,80,.8);border:1px solid rgba(77,170,255,.3);color:rgba(200,220,255,.8);cursor:pointer;border-radius:3px;}
+.cbtn:hover{background:rgba(77,170,255,.2);color:#fff;}
+.cbtn.on{border-color:#4DAAFF;color:#000;background:#4DAAFF;}
+#chart-val{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:#fff;}
+.home-btn{position:fixed;bottom:18px;right:18px;z-index:80;width:44px;height:44px;background:rgba(9,15,30,.85);border:1px solid rgba(30,48,80,.8);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;font-size:18px;transition:all .2s;opacity:.65;}
+.home-btn:hover{background:#F97316;border-color:#F97316;opacity:1;}
 
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <a href="index.html" title="Inicio" style="text-decoration:none;display:flex;align-items:center;gap:10px;">
+      <img src="assets/logo.png" alt="SalaIncs" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;">
+      <div class="tb-name">Sala<em>Incs</em></div>
+    </a>
+    <div class="tb-right">
+      <div class="tb-status">● SISTEMA AUTÓNOMO · OPERATIVO</div>
+      <div id="clock">--:--:--</div>
+    </div>
+  </div>
+  <div id="line-tabs"></div>
+  <button id="mob-map-btn" onclick="toggleMobMap()">🗺 Ver mapa · Línea D</button>
+  <div id="main">
+    <div style="display:flex;flex-direction:column;overflow:hidden;">
+      <div id="map-panel">
+        <div id="map-label">Línea D · Tiempo real</div>
+        <canvas id="map-canvas"></canvas>
+      </div>
+      <div id="metrics-bar"></div>
+    </div>
+    <div id="right-panel">
+      <div class="panel-section" style="flex-shrink:0">
+        <div class="panel-title" style="color:var(--orange);border-bottom-color:var(--orange)">Formaciones</div>
+        <div class="panel-body" id="trains-body"></div>
+      </div>
+      <div class="panel-section" style="flex:1">
+        <div class="panel-title" style="color:var(--accent);border-bottom-color:var(--accent)">Ambiental · Estaciones</div>
+        <div class="panel-body" id="env-body"></div>
+      </div>
+      <div class="panel-section" style="flex-shrink:0">
+        <div class="panel-title" style="color:var(--red);border-bottom-color:var(--red)">⚡ Eventos</div>
+        <div class="panel-body" id="event-log" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- CHART MODAL -->
+<div id="chart-modal">
+  <div id="chart-header">
+    <div><div id="chart-title">—</div><div id="chart-sub">Últimas 60 min · Tiempo real</div></div>
+    <div id="chart-close" onclick="closeChart()">✕</div>
+  </div>
+  <div id="chart-wrap">
+    <canvas id="chart-canvas"></canvas>
+    <div id="chart-hint">Rueda: zoom · Arrastrar: desplazar · Doble click: reset</div>
+  </div>
+  <div id="chart-bar">
+    <button class="cbtn on" onclick="cRange(this,30)">30min</button>
+    <button class="cbtn" onclick="cRange(this,60)">1h</button>
+    <button class="cbtn" onclick="cRange(this,120)">2h</button>
+    <button class="cbtn" onclick="cRange(this,480)">8h</button>
+    <div id="chart-val"></div>
+  </div>
+</div>
+<a href="index.html" class="home-btn" title="Ir al inicio">🏠</a>
+<script>
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   dashboard/data.js — Lines, stations, fleet
+═══════════════════════════════════════════ */
+
+const LINES = {
+  A: {
+    color: '#00aedb', name: 'Línea A',
+    from: 'Plaza de Mayo', to: 'San Pedrito',
+    ests: ['Plaza de Mayo','Perú','Piedras','Lima','Sáenz Peña','Congreso',
+           'Pasco','Alberti','Plaza Miserere','Castro Barros','Río de Janeiro',
+           'Acoyte','Primera Junta','Carabobo','Puan','Flores','San Pedrito'],
+    salidas: ['Av. Rivadavia','Av. de Mayo'],
+    envStations: ['Plaza Miserere','Primera Junta','San Pedrito'],
+  },
+  B: {
+    color: '#ed1c24', name: 'Línea B',
+    from: 'L.N. Alem', to: 'J.M. de Rosas',
+    ests: ['L.N. Alem','Florida','Uruguay','C. Pellegrini','Callao',
+           'Pasteur/AMIA','Medrano','Ángel Gallardo','Malabia','Dorrego',
+           'Federico Lacroze','Tronador','Los Incas','J.M. de Rosas'],
+    salidas: ['Av. Corrientes'],
+    envStations: ['L.N. Alem','Ángel Gallardo','J.M. de Rosas'],
+  },
+  C: {
+    color: '#0072ce', name: 'Línea C',
+    from: 'Retiro', to: 'Constitución',
+    ests: ['Retiro','San Martín','Lavalle','Diagonal Norte',
+           'Av. de Mayo','Moreno','Independencia','San Juan','Constitución'],
+    salidas: ['Retiro','Constitución'],
+    envStations: ['Retiro','Av. de Mayo','Constitución'],
+  },
+  D: {
+    color: '#00884A', name: 'Línea D',
+    from: 'Catedral', to: 'Cong. Tucumán',
+    ests: ['Catedral','Tribunales','Callao','Pueyrredón','Agüero','Bulnes',
+           'Scalabrini Ortiz','Plaza Italia','Palermo','M. Carranza',
+           'Olleros','J. Hernández','Juramento','Cong. Tucumán'],
+    salidas: ['Av. Córdoba','Av. Santa Fe'],
+    envStations: ['Catedral','Plaza Italia','Cong. Tucumán'],
+  },
+  E: {
+    color: '#662c91', name: 'Línea E',
+    from: 'Bolívar', to: 'Plaza Virreyes',
+    ests: ['Bolívar','Belgrano','San José','Entre Ríos','Pichincha','Jujuy',
+           'Urquiza','Med. Milagrosa','J.M. Moreno','E. Mitre',
+           'Bonorino','Varela','Rivadavia','Plaza Virreyes'],
+    salidas: ['Av. Independencia'],
+    envStations: ['Bolívar','Jujuy','Plaza Virreyes'],
+  },
+  H: {
+    color: '#e8a800', name: 'Línea H',
+    from: 'Fac. Derecho', to: 'Hospitales',
+    ests: ['Fac. de Derecho','Las Heras','Santa Fe','Córdoba','Corrientes',
+           'Venezuela','Humberto 1°','Caseros','Parque Patricios','Hospitales'],
+    salidas: ['Av. Pueyrredón'],
+    envStations: ['Fac. de Derecho','Corrientes','Hospitales'],
+  },
+};
+
+const FLEET_INIT = {
+  A: [{id:'A1',pos:.06,dir:1},{id:'A2',pos:.52,dir:-1},{id:'A3',pos:.78,dir:1}],
+  B: [{id:'B1',pos:.14,dir:1},{id:'B2',pos:.60,dir:-1},{id:'B3',pos:.87,dir:1}],
+  C: [{id:'C1',pos:.10,dir:1},{id:'C2',pos:.65,dir:-1}],
+  D: [{id:'D1',pos:.05,dir:1},{id:'D2',pos:.42,dir:-1},{id:'D3',pos:.75,dir:1}],
+  E: [{id:'E1',pos:.18,dir:1},{id:'E2',pos:.58,dir:-1},{id:'E3',pos:.83,dir:1}],
+  H: [{id:'H1',pos:.08,dir:1},{id:'H2',pos:.70,dir:-1}],
+};
+
+const ALARMS = {
+  A: ['Vibración bogie A1 · Flores','CO₂ alto · Primera Junta','PIS actualizado · Miserere'],
+  B: ['Temp. túnel · Lacroze','Formación B2 · mantenimiento','Ocupación alta · C.Pellegrini'],
+  C: ['Conectividad restaurada · Retiro','Vibración C1 · Constitución','IA detecta desgaste · San Martín'],
+  D: ['Hombre en vía · Callao — RESUELTO','CO₂ elevado · Palermo','D3 llegando a Cong.Tucumán'],
+  E: ['Fuelle P.elevada · E2 · Jujuy','HR alta · Urquiza','PIS offline · Urquiza — recuperado'],
+  H: ['Anomalía rodamiento · H1','Ventilación activada · Hospitales','Sensor CO₂ · Corrientes OK'],
+};
+
+</script>
+<script>
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   dashboard/map.js — Canvas map renderer
+═══════════════════════════════════════════ */
+
+let mapCanvas, mapCtx;
+
+function initMap() {
+  mapCanvas = document.getElementById('map-canvas');
+  mapCtx    = mapCanvas.getContext('2d');
+  resizeMap();
+}
 
 function resizeMap() {
   if (!mapCanvas) return;
@@ -620,225 +768,6 @@ function drawMap(lineKey, fleet) {
     mapCtx.textAlign = 'left';
   });
 }
-
-
-// ========== TIME SERIES CHART ==========
-const cHist = {};
-const cHLen = 480;
-
-function cSeed(key, base, range) {
-  const a = new Float32Array(cHLen);
-  let v = base;
-  for (let i = 0; i < cHLen; i++) {
-    v += (Math.random() - .5) * range * 0.06;
-    v = Math.max(base - range, Math.min(base + range, v));
-    a[i] = v;
-  }
-  cHist[key] = a;
-}
-
-function cPush(key, val, base, range) {
-  if (!cHist[key]) cSeed(key, base, range);
-  cHist[key].copyWithin(0, 1);
-  cHist[key][cHLen - 1] = val;
-}
-
-// Feed live data every second
-setInterval(() => {
-  if (!selLine) return;
-  (fleet[selLine] || []).forEach(f => cPush('spd_'+f.id, f.speed, 40, 30));
-  (envData[selLine] || []).forEach((e, i) => {
-    cPush(selLine+'_'+i+'_co2', e.co2,  750, 400);
-    cPush(selLine+'_'+i+'_tmp', e.temp,  24,  8);
-    cPush(selLine+'_'+i+'_hum', e.hum,   60, 20);
-    cPush(selLine+'_'+i+'_iaq', e.iaq,   50, 40);
-  });
-}, 1000);
-
-// Chart state
-let cKey='', cLabel='', cUnit='', cColor='#4DAAFF', cMin=0, cMax=100;
-let cVs=420, cVl=60;
-let cDrag=false, cDragX=0, cDragVs=0;
-let cTipX=-1, cRAF=null, cOpen=false;
-
-function openChart(key, label, unit, color, mn, mx, base, range) {
-  if (!cHist[key]) cSeed(key, base, range);
-  cKey=key; cLabel=label; cUnit=unit; cColor=color; cMin=mn; cMax=mx;
-  cVl=60; cVs=Math.max(0, cHLen-cVl);
-  cOpen=true;
-  document.getElementById('chart-modal').classList.add('open');
-  document.getElementById('chart-title').textContent = label;
-  document.getElementById('chart-sub').textContent = 'Últimas 60 min · Tiempo real';
-  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.cbtn')[0].classList.add('on');
-  cInitCanvas();
-  cLoop();
-}
-
-function closeChart() {
-  cOpen=false;
-  document.getElementById('chart-modal').classList.remove('open');
-  if (cRAF) cancelAnimationFrame(cRAF);
-}
-
-function cRange(btn, mins) {
-  cVl=mins; cVs=Math.max(0, cHLen-mins);
-  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.getElementById('chart-sub').textContent='Últimas '+mins+' min · Tiempo real';
-}
-
-function cInitCanvas() {
-  const wrap = document.getElementById('chart-wrap');
-  let cv = document.getElementById('chart-canvas');
-  cv.width  = wrap.clientWidth;
-  cv.height = wrap.clientHeight;
-  // Events
-  wrap.onwheel = e => {
-    e.preventDefault();
-    const f = e.deltaY>0 ? 1.25 : 0.8;
-    const cx = e.offsetX / wrap.clientWidth;
-    const nl = Math.min(cHLen, Math.max(10, cVl*f));
-    const pv = cVs + cx*cVl;
-    cVl=nl; cVs=Math.max(0,Math.min(cHLen-cVl,pv-cx*nl));
-  };
-  wrap.onmousedown = e => { cDrag=true; cDragX=e.offsetX; cDragVs=cVs; wrap.style.cursor='grabbing'; };
-  wrap.ondblclick  = () => { cVl=60; cVs=Math.max(0,cHLen-60); };
-  wrap.onmousemove = e => { cTipX=e.offsetX; };
-  wrap.onmouseleave= () => { cTipX=-1; };
-  window.onmouseup = () => { cDrag=false; if(wrap)wrap.style.cursor='crosshair'; };
-  wrap.addEventListener('mousemove', e => {
-    if (!cDrag) return;
-    const dx = (cDragX-e.offsetX)/wrap.clientWidth*cVl;
-    cVs = Math.max(0,Math.min(cHLen-cVl,cDragVs+dx));
-  });
-  // Touch
-  let tx0=0, tvs0=0, tp0=0;
-  wrap.ontouchstart = e => {
-    tx0=e.touches[0].clientX; tvs0=cVs;
-    if(e.touches.length===2) tp0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-  };
-  wrap.ontouchmove  = e => {
-    e.preventDefault();
-    if(e.touches.length===2){
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      cVl=Math.min(cHLen,Math.max(10,cVl*tp0/d)); cVs=Math.max(0,Math.min(cHLen-cVl,cVs)); tp0=d;
-    } else {
-      const dx=(tx0-e.touches[0].clientX)/wrap.clientWidth*cVl;
-      cVs=Math.max(0,Math.min(cHLen-cVl,tvs0+dx));
-    }
-  };
-}
-
-function cLoop() {
-  if (!cOpen) return;
-  cDraw();
-  cRAF = requestAnimationFrame(cLoop);
-}
-
-function cDraw() {
-  const cv  = document.getElementById('chart-canvas');
-  if (!cv) return;
-  const wrap= document.getElementById('chart-wrap');
-  if (cv.width !== wrap.clientWidth || cv.height !== wrap.clientHeight){
-    cv.width=wrap.clientWidth; cv.height=wrap.clientHeight;
-  }
-  const ctx = cv.getContext('2d');
-  const W=cv.width, H=cv.height;
-  const PL=54,PR=16,PT=20,PB=36;
-  const pw=W-PL-PR, ph=H-PT-PB;
-  const x0=PL, y0=PT;
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='rgba(6,14,26,1)'; ctx.fillRect(0,0,W,H);
-
-  const a   = cHist[cKey];
-  if (!a) return;
-  const s   = Math.max(0,Math.round(cVs));
-  const e2  = Math.min(cHLen,Math.round(cVs+cVl));
-  const sl  = Array.from(a.slice(s,e2));
-  const n   = sl.length;
-  if (n<2) return;
-
-  const lo=Math.min(...sl),hi=Math.max(...sl);
-  const pad=(hi-lo)*0.15||3;
-  const yMin=Math.max(cMin,lo-pad), yMax=Math.min(cMax,hi+pad);
-  const tx=i=>x0+i/(n-1)*pw;
-  const ty=v=>y0+ph-((v-yMin)/(yMax-yMin))*ph;
-
-  // Grid & Y labels
-  ctx.font='11px Barlow Condensed,sans-serif'; ctx.textAlign='right';
-  for(let g=0;g<=5;g++){
-    const v=yMin+(yMax-yMin)*g/5, gy=ty(v);
-    ctx.strokeStyle='rgba(30,50,80,.5)'; ctx.lineWidth=.5;
-    ctx.beginPath(); ctx.moveTo(x0,gy); ctx.lineTo(x0+pw,gy); ctx.stroke();
-    ctx.fillStyle='rgba(107,138,175,.55)';
-    ctx.fillText((cUnit==='°C'?v.toFixed(1):Math.round(v))+(cUnit?'  ':'')+cUnit, x0-4, gy+4);
-  }
-
-  // X labels
-  ctx.textAlign='center'; ctx.fillStyle='rgba(107,138,175,.5)';
-  for(let t=0;t<=5;t++){
-    const idx=Math.round(t/5*(n-1)), gx=tx(idx);
-    const ma=Math.round(cHLen-1-(s+idx));
-    ctx.fillText(ma===0?'ahora':'-'+ma+'m', gx, y0+ph+22);
-    ctx.strokeStyle='rgba(30,50,80,.25)'; ctx.lineWidth=.5;
-    ctx.beginPath(); ctx.moveTo(gx,y0); ctx.lineTo(gx,y0+ph); ctx.stroke();
-  }
-
-  // Threshold
-  if(cUnit==='ppm'){ const thr=900,thy=ty(thr);
-    ctx.strokeStyle='rgba(249,115,22,.5)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
-    ctx.beginPath(); ctx.moveTo(x0,thy); ctx.lineTo(x0+pw,thy); ctx.stroke();
-    ctx.setLineDash([]); ctx.fillStyle='rgba(249,115,22,.6)'; ctx.textAlign='left';
-    ctx.fillText('Límite 900 ppm',x0+4,thy-4);
-  }
-
-  // Area
-  const g2=ctx.createLinearGradient(0,y0,0,y0+ph);
-  g2.addColorStop(0,cColor+'35'); g2.addColorStop(1,cColor+'05');
-  ctx.beginPath(); ctx.moveTo(tx(0),y0+ph);
-  sl.forEach((_,i)=>ctx.lineTo(tx(i),ty(sl[i])));
-  ctx.lineTo(tx(n-1),y0+ph); ctx.closePath();
-  ctx.fillStyle=g2; ctx.fill();
-
-  // Line
-  ctx.beginPath(); ctx.strokeStyle=cColor; ctx.lineWidth=2.5; ctx.lineJoin='round';
-  sl.forEach((_,i)=>i===0?ctx.moveTo(tx(i),ty(sl[i])):ctx.lineTo(tx(i),ty(sl[i])));
-  ctx.stroke();
-
-  // Last dot + pulse
-  const lx=tx(n-1),ly=ty(sl[n-1]),p=(Date.now()%1500)/1500;
-  ctx.beginPath(); ctx.arc(lx,ly,5,0,Math.PI*2); ctx.fillStyle=cColor; ctx.fill();
-  ctx.beginPath(); ctx.arc(lx,ly,5+p*8,0,Math.PI*2);
-  ctx.strokeStyle=cColor+Math.round((1-p)*120).toString(16).padStart(2,'0');
-  ctx.lineWidth=1.5; ctx.stroke();
-
-  // Tooltip
-  if(cTipX>=x0&&cTipX<=x0+pw){
-    const ti=Math.round((cTipX-x0)/pw*(n-1));
-    const tv=sl[Math.max(0,Math.min(n-1,ti))];
-    const ttx=tx(ti),tty=ty(tv);
-    ctx.strokeStyle='rgba(255,255,255,.15)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.moveTo(ttx,y0); ctx.lineTo(ttx,y0+ph); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.beginPath(); ctx.arc(ttx,tty,6,0,Math.PI*2);
-    ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle=cColor; ctx.lineWidth=2; ctx.stroke();
-    const lbl=(cUnit==='°C'?tv.toFixed(1):Math.round(tv))+' '+cUnit;
-    const bx=Math.min(ttx+8,W-80),by=Math.max(tty-28,y0+4);
-    ctx.fillStyle='rgba(9,16,28,.92)'; ctx.strokeStyle=cColor; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.roundRect(bx,by,72,22,3); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='#fff'; ctx.font='bold 13px Barlow Condensed,sans-serif';
-    ctx.textAlign='center'; ctx.fillText(lbl,bx+36,by+15);
-    const cv2=document.getElementById('chart-val');
-    if(cv2){cv2.textContent=lbl;cv2.style.color=cColor;}
-  } else {
-    const cv2=document.getElementById('chart-val');
-    const lv=sl[n-1];
-    if(cv2){cv2.textContent=(cUnit==='°C'?lv.toFixed(1):Math.round(lv))+' '+cUnit;cv2.style.color=cColor;}
-  }
-}
-
-document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeChart(); });
 
 </script>
 <script>
@@ -1070,7 +999,7 @@ function buildTrainList(k) {
       <div class="train-info">
         <div class="train-station" id="tst-${f.id}">${st}</div>
         <div class="train-speed-row">
-          <span class="train-speed" id="ts-${f.id}" style="color:${L.color};cursor:pointer" title="Ver historial velocidad" onclick="openChart('spd_${f.id}','Velocidad · ${f.id}','km/h','${L.color}',0,80,${Math.round(f.speed)},30)">${Math.round(f.speed)} km/h</span>
+          <span class="train-speed" id="ts-${f.id}" style="color:${L.color}">${Math.round(f.speed)} km/h</span>
           <div class="speed-bar"><div class="speed-fill" id="tb-${f.id}" style="background:${L.color};width:${f.speed/80*100}%"></div></div>
           <span class="train-dir">${f.dir > 0 ? '→' : '←'}</span>
         </div>
@@ -1097,15 +1026,14 @@ function buildEnvList(k) {
   if (!el) return;
   el.innerHTML = envData[k].map((e, i) => {
     const over = e.co2 > 900;
-    const oc = (f,lbl,u,c,mn,mx,base) => `onclick="openChart('${k}_${i}_${f}','${lbl}','${u}','${c}',${mn},${mx},${base},${mx-mn})"`;
     return `
     <div class="env-card" style="border-left-color:${over ? 'var(--orange)' : 'var(--accent)'}">
       <div class="env-name">${e.name}</div>
       <div class="env-values">
-        <div class="env-chip" style="color:${over?'var(--orange)':'var(--green)'};cursor:pointer" title="Ver historial" id="eco2-${k}${i}" ${oc('co2','CO₂ · '+e.name,'ppm','#F97316',300,1500,Math.round(e.co2))}>${Math.round(e.co2)}<span>ppm</span></div>
-        <div class="env-chip" style="color:var(--accent);cursor:pointer" title="Ver historial" id="etmp-${k}${i}" ${oc('tmp','Temperatura · '+e.name,'°C','#4DAAFF',15,40,Math.round(e.temp))}>${e.temp.toFixed(1)}<span>°C</span></div>
-        <div class="env-chip" style="color:var(--accent);cursor:pointer" title="Ver historial" id="ehum-${k}${i}" ${oc('hum','Humedad · '+e.name,'%','#4DAAFF',30,85,Math.round(e.hum))}>${Math.round(e.hum)}<span>%</span></div>
-        <div class="env-chip" style="color:${e.iaq>70?'var(--orange)':'var(--green)'};cursor:pointer" title="Ver historial" id="eiaq-${k}${i}" ${oc('iaq','IAQ · '+e.name,'IAQ','#00CC66',0,150,Math.round(e.iaq))}>${Math.round(e.iaq)}<span>IAQ</span></div>
+        <div class="env-chip" style="color:${over?'var(--orange)':'var(--green)'};cursor:pointer" id="eco2-${k}${i}" title="Historial" onclick="openChart('${k}_${i}_co2','CO2·${e.name}','ppm','#F97316',300,1500,${Math.round(e.co2)},600)">${Math.round(e.co2)}<span>ppm</span></div>
+        <div class="env-chip" style="color:var(--accent);cursor:pointer" id="etmp-${k}${i}" title="Historial" onclick="openChart('${k}_${i}_tmp','Temp·${e.name}','°C','#4DAAFF',15,40,${e.temp.toFixed(1)},12)">${e.temp.toFixed(1)}<span>°C</span></div>
+        <div class="env-chip" style="color:var(--accent);cursor:pointer" id="ehum-${k}${i}" title="Historial" onclick="openChart('${k}_${i}_hum','Hum·${e.name}','%','#4DAAFF',30,85,${Math.round(e.hum)},25)">${Math.round(e.hum)}<span>%</span></div>
+        <div class="env-chip" style="color:${e.iaq>70?'var(--orange)':'var(--green)'};cursor:pointer" id="eiaq-${k}${i}" title="Historial" onclick="openChart('${k}_${i}_iaq','IAQ·${e.name}','IAQ','#00CC66',0,150,${Math.round(e.iaq)},60)">${Math.round(e.iaq)}<span>IAQ</span></div>
       </div>
       <div class="env-bar"><div class="env-bar-fill" id="ebar-${k}${i}" style="width:${e.co2/1500*100}%;background:${over?'var(--orange)':'var(--accent)'}"></div></div>
     </div>`;
@@ -1166,30 +1094,69 @@ window.addEventListener('load', init);
 window.addEventListener('resize', () => resizeMap());
 
 </script>
+<script>
 
+const cHist={},cHLen=480;
+function cSeed(k,b,r){const a=new Float32Array(cHLen);let v=b;for(let i=0;i<cHLen;i++){v+=(Math.random()-.5)*r*.06;v=Math.max(b-r,Math.min(b+r,v));a[i]=v;}cHist[k]=a;}
+function cPush(k,val,b,r){if(!cHist[k])cSeed(k,b,r);cHist[k].copyWithin(0,1);cHist[k][cHLen-1]=val;}
+setInterval(()=>{if(!selLine)return;(fleet[selLine]||[]).forEach(f=>cPush('spd_'+f.id,f.speed,40,30));(envData[selLine]||[]).forEach((e,i)=>{cPush(selLine+'_'+i+'_co2',e.co2,750,400);cPush(selLine+'_'+i+'_tmp',e.temp,24,8);cPush(selLine+'_'+i+'_hum',e.hum,60,20);cPush(selLine+'_'+i+'_iaq',e.iaq,50,40);});},1000);
+let cKey='',cLabel='',cUnit='',cColor='#4DAAFF',cMin=0,cMax=100,cVs=420,cVl=60,cDrag=false,cDragX=0,cDragVs=0,cTipX=-1,cRAF=null,cOpen=false;
+function openChart(key,label,unit,color,mn,mx,base,range){
+  if(!cHist[key])cSeed(key,base,range);
+  cKey=key;cLabel=label;cUnit=unit;cColor=color;cMin=mn;cMax=mx;
+  cVl=60;cVs=Math.max(0,cHLen-60);cOpen=true;
+  document.getElementById('chart-modal').classList.add('open');
+  document.getElementById('chart-title').textContent=label;
+  document.getElementById('chart-sub').textContent='Últimas 60 min · Tiempo real';
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.cbtn')[0].classList.add('on');
+  cInit();cLoop();
+}
+function closeChart(){cOpen=false;document.getElementById('chart-modal').classList.remove('open');if(cRAF)cancelAnimationFrame(cRAF);}
+function cRange(btn,mins){cVl=mins;cVs=Math.max(0,cHLen-mins);document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');}
+function cInit(){
+  const wrap=document.getElementById('chart-wrap');
+  const cv=document.getElementById('chart-canvas');
+  cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;
+  wrap.onwheel=e=>{e.preventDefault();const f=e.deltaY>0?1.25:0.8,cx=e.offsetX/wrap.clientWidth,nl=Math.min(cHLen,Math.max(10,cVl*f)),pv=cVs+cx*cVl;cVl=nl;cVs=Math.max(0,Math.min(cHLen-cVl,pv-cx*nl));};
+  wrap.onmousedown=e=>{cDrag=true;cDragX=e.offsetX;cDragVs=cVs;wrap.style.cursor='grabbing';};
+  wrap.ondblclick=()=>{cVl=60;cVs=Math.max(0,cHLen-60);};
+  wrap.onmousemove=e=>{if(cDrag){const dx=(cDragX-e.offsetX)/wrap.clientWidth*cVl;cVs=Math.max(0,Math.min(cHLen-cVl,cDragVs+dx));}cTipX=e.offsetX;};
+  wrap.onmouseup=()=>{cDrag=false;wrap.style.cursor='crosshair';};
+  wrap.onmouseleave=()=>{cTipX=-1;cDrag=false;};
+  let tx0=0,tvs0=0,tp0=0;
+  wrap.ontouchstart=e=>{tx0=e.touches[0].clientX;tvs0=cVs;if(e.touches.length===2)tp0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);};
+  wrap.ontouchmove=e=>{e.preventDefault();if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);cVl=Math.min(cHLen,Math.max(10,cVl*tp0/d));cVs=Math.max(0,Math.min(cHLen-cVl,cVs));tp0=d;}else{const dx=(tx0-e.touches[0].clientX)/wrap.clientWidth*cVl;cVs=Math.max(0,Math.min(cHLen-cVl,tvs0+dx));}};
+  window.addEventListener('resize',()=>{if(!cOpen)return;cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;});
+}
+function cLoop(){if(!cOpen)return;cDraw();cRAF=requestAnimationFrame(cLoop);}
+function cDraw(){
+  const cv=document.getElementById('chart-canvas'),wrap=document.getElementById('chart-wrap');
+  if(!cv||!wrap)return;
+  if(cv.width!==wrap.clientWidth||cv.height!==wrap.clientHeight){cv.width=wrap.clientWidth;cv.height=wrap.clientHeight;}
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,PL=54,PR=16,PT=20,PB=36,pw=W-PL-PR,ph=H-PT-PB,x0=PL,y0=PT;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(6,14,26,1)';ctx.fillRect(0,0,W,H);
+  const a=cHist[cKey];if(!a)return;
+  const s=Math.max(0,Math.round(cVs)),e2=Math.min(cHLen,Math.round(cVs+cVl)),sl=Array.from(a.slice(s,e2)),n=sl.length;
+  if(n<2)return;
+  const lo=Math.min(...sl),hi=Math.max(...sl),pad=(hi-lo)*.15||3;
+  const yMin=Math.max(cMin,lo-pad),yMax=Math.min(cMax,hi+pad);
+  const tx=i=>x0+i/(n-1)*pw,ty=v=>y0+ph-((v-yMin)/(yMax-yMin))*ph;
+  ctx.font='11px Barlow Condensed,sans-serif';ctx.textAlign='right';
+  for(let g=0;g<=5;g++){const v=yMin+(yMax-yMin)*g/5,gy=ty(v);ctx.strokeStyle='rgba(30,50,80,.5)';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(x0,gy);ctx.lineTo(x0+pw,gy);ctx.stroke();ctx.fillStyle='rgba(107,138,175,.55)';ctx.fillText((cUnit==='°C'?v.toFixed(1):Math.round(v))+(cUnit?' ':'')+cUnit,x0-4,gy+4);}
+  ctx.textAlign='center';ctx.fillStyle='rgba(107,138,175,.5)';
+  for(let t=0;t<=5;t++){const idx=Math.round(t/5*(n-1)),gx=tx(idx),ma=Math.round(cHLen-1-(s+idx));ctx.fillText(ma===0?'ahora':'-'+ma+'m',gx,y0+ph+22);ctx.strokeStyle='rgba(30,50,80,.25)';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(gx,y0);ctx.lineTo(gx,y0+ph);ctx.stroke();}
+  if(cUnit==='ppm'&&900>=yMin&&900<=yMax){const thy=ty(900);ctx.strokeStyle='rgba(249,115,22,.5)';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(x0,thy);ctx.lineTo(x0+pw,thy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='rgba(249,115,22,.6)';ctx.textAlign='left';ctx.fillText('900 ppm',x0+4,thy-4);}
+  const g2=ctx.createLinearGradient(0,y0,0,y0+ph);g2.addColorStop(0,cColor+'35');g2.addColorStop(1,cColor+'05');
+  ctx.beginPath();ctx.moveTo(tx(0),y0+ph);sl.forEach((_,i)=>ctx.lineTo(tx(i),ty(sl[i])));ctx.lineTo(tx(n-1),y0+ph);ctx.closePath();ctx.fillStyle=g2;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle=cColor;ctx.lineWidth=2.5;ctx.lineJoin='round';sl.forEach((_,i)=>i===0?ctx.moveTo(tx(i),ty(sl[i])):ctx.lineTo(tx(i),ty(sl[i])));ctx.stroke();
+  const lx=tx(n-1),ly=ty(sl[n-1]),p=(Date.now()%1500)/1500;
+  ctx.beginPath();ctx.arc(lx,ly,5,0,Math.PI*2);ctx.fillStyle=cColor;ctx.fill();
+  ctx.beginPath();ctx.arc(lx,ly,5+p*8,0,Math.PI*2);ctx.strokeStyle=cColor+Math.round((1-p)*120).toString(16).padStart(2,'0');ctx.lineWidth=1.5;ctx.stroke();
+  if(cTipX>=x0&&cTipX<=x0+pw){const ti=Math.round((cTipX-x0)/pw*(n-1)),tv=sl[Math.max(0,Math.min(n-1,ti))],ttx=tx(ti),tty=ty(tv);ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(ttx,y0);ctx.lineTo(ttx,y0+ph);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(ttx,tty,6,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=cColor;ctx.lineWidth=2;ctx.stroke();const lbl=(cUnit==='°C'?tv.toFixed(1):Math.round(tv))+' '+cUnit,bx=Math.min(ttx+8,W-80),by=Math.max(tty-28,y0+4);ctx.fillStyle='rgba(9,16,28,.92)';ctx.strokeStyle=cColor;ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(bx,by,72,22,3);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 13px Barlow Condensed,sans-serif';ctx.textAlign='center';ctx.fillText(lbl,bx+36,by+15);const cv2=document.getElementById('chart-val');if(cv2){cv2.textContent=lbl;cv2.style.color=cColor;}}else{const cv2=document.getElementById('chart-val'),lv=sl[n-1];if(cv2){cv2.textContent=(cUnit==='°C'?lv.toFixed(1):Math.round(lv))+' '+cUnit;cv2.style.color=cColor;}}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeChart();});
 
-
-<div id="chart-modal">
-  <div id="chart-header">
-    <div>
-      <div id="chart-title">—</div>
-      <div id="chart-sub">Últimas 60 min · Tiempo real</div>
-    </div>
-    <div id="chart-close" onclick="closeChart()">✕</div>
-  </div>
-  <div id="chart-wrap">
-    <canvas id="chart-canvas"></canvas>
-    <div id="chart-hint">Rueda: zoom · Arrastrar: desplazar · Doble click: resetear</div>
-  </div>
-  <div id="chart-bar">
-    <button class="cbtn on" onclick="cRange(this,30)">30min</button>
-    <button class="cbtn" onclick="cRange(this,60)">1h</button>
-    <button class="cbtn" onclick="cRange(this,120)">2h</button>
-    <button class="cbtn" onclick="cRange(this,480)">8h</button>
-    <div id="chart-val"></div>
-  </div>
-</div>
-
-<a href="index.html" class="home-btn" title="Ir al inicio">🏠</a>
+</script>
 </body>
 </html>
