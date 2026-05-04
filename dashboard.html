@@ -451,6 +451,103 @@ html, body {
   transform:scale(1.08);
 }
 
+
+/* ── TIME SERIES MODAL ── */
+#chart-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(3,8,18,.92);
+  backdrop-filter: blur(8px);
+  flex-direction: column;
+  padding: 20px;
+}
+#chart-modal.open { display: flex; }
+#chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+#chart-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+}
+#chart-subtitle {
+  font-size: 13px;
+  color: rgba(200,220,255,.55);
+  letter-spacing: 1px;
+  margin-top: 3px;
+}
+#chart-close {
+  width: 40px; height: 40px;
+  background: rgba(30,48,80,.8);
+  border: 1px solid rgba(77,170,255,.3);
+  color: #fff;
+  font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+#chart-close:hover { background: var(--red); }
+#chart-wrap {
+  flex: 1;
+  position: relative;
+  background: rgba(6,14,26,.95);
+  border: 1px solid rgba(30,50,80,.8);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+#chart-canvas { display: block; width: 100%; height: 100%; }
+#chart-hint {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  font-size: 11px;
+  color: rgba(200,220,255,.3);
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+#chart-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+.chart-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 7px 16px;
+  background: rgba(30,48,80,.8);
+  border: 1px solid rgba(77,170,255,.3);
+  color: rgba(200,220,255,.8);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all .2s;
+}
+.chart-btn:hover { background: rgba(77,170,255,.2); color: #fff; }
+.chart-btn.active { background: var(--accent,#4DAAFF); color: #000; border-color: var(--accent,#4DAAFF); }
+#chart-current-val {
+  margin-left: auto;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px; font-weight: 900;
+  color: #fff;
+  align-self: center;
+}
+/* Make env chips and train speeds look clickable */
+.env-chip, .train-speed { cursor: pointer; }
+.env-chip:hover { opacity: .8; text-decoration: underline dotted; }
+
 </style>
 </head>
 <body>
@@ -593,6 +690,396 @@ const ALARMS = {
   E: ['Fuelle P.elevada · E2 · Jujuy','HR alta · Urquiza','PIS offline · Urquiza — recuperado'],
   H: ['Anomalía rodamiento · H1','Ventilación activada · Hospitales','Sensor CO₂ · Corrientes OK'],
 };
+
+
+// ========== TIME SERIES CHART ==========
+(function(){
+  const HISTORY_LEN = 480; // 480 samples = 8 hours at 1 per minute
+  const history = {}; // key → Float32Array
+
+  // Seed history with realistic data
+  function seedHistory(key, base, range, noisy){
+    const arr = new Float32Array(HISTORY_LEN);
+    let v = base;
+    for(let i=0;i<HISTORY_LEN;i++){
+      v += (Math.random()-.5)*(noisy?range*0.08:range*0.03);
+      v = Math.max(base-range, Math.min(base+range, v));
+      arr[i] = v;
+    }
+    return arr;
+  }
+
+  // Pre-seed all env channels
+  function getHistory(key, base, range){
+    if(!history[key]) history[key] = seedHistory(key, base, range, true);
+    return history[key];
+  }
+
+  // Push new value into rolling buffer
+  function pushValue(key, val){
+    const arr = history[key];
+    if(!arr) return;
+    arr.copyWithin(0,1);
+    arr[HISTORY_LEN-1] = val;
+  }
+
+  // Hook into env update to record history
+  const _origUpdateEnvCard = window._updateEnvCard || null;
+  // We'll call pushValue from the env loop — monkey-patch
+  const origEnv = window.startEnvLoop;
+
+  // Chart state
+  let chartOpen = false;
+  let chartKey = null;
+  let chartLabel = '';
+  let chartUnit = '';
+  let chartColor = '#4DAAFF';
+  let chartMin = 0, chartMax = 100;
+  let viewStart = 0, viewLen = 60; // indices into history
+  let isDragging = false, dragStartX = 0, dragViewStart = 0;
+  let chartCanvas, chartCtx, chartRAF;
+  let tooltipX = -1;
+
+  window.openChart = function(key, label, unit, color, min, max, base, range){
+    chartKey   = key;
+    chartLabel = label;
+    chartUnit  = unit;
+    chartColor = color;
+    chartMin   = min;
+    chartMax   = max;
+    if(!history[key]) getHistory(key, base, range);
+    viewStart  = Math.max(0, HISTORY_LEN - 60);
+    viewLen    = 60;
+    chartOpen  = true;
+    const modal = document.getElementById('chart-modal');
+    modal.classList.add('open');
+    document.getElementById('chart-title').textContent    = label;
+    document.getElementById('chart-subtitle').textContent = 'Últimas ' + Math.round(viewLen) + ' min · Tiempo real';
+    document.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelector('.chart-btn').classList.add('active');
+    initChartCanvas();
+    startChartLoop();
+  };
+
+  window.closeChart = function(){
+    chartOpen = false;
+    document.getElementById('chart-modal').classList.remove('open');
+    if(chartRAF) cancelAnimationFrame(chartRAF);
+  };
+
+  window.setRange = function(btn, minutes){
+    viewLen   = minutes;
+    viewStart = Math.max(0, HISTORY_LEN - minutes);
+    document.querySelectorAll('.chart-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('chart-subtitle').textContent = 'Últimas '+minutes+' min · Tiempo real';
+  };
+
+  function initChartCanvas(){
+    chartCanvas = document.getElementById('chart-canvas');
+    const wrap  = document.getElementById('chart-wrap');
+    chartCanvas.width  = wrap.clientWidth;
+    chartCanvas.height = wrap.clientHeight;
+    chartCtx    = chartCanvas.getContext('2d');
+    bindEvents();
+  }
+
+  function bindEvents(){
+    const w = document.getElementById('chart-wrap');
+    // Remove old listeners by cloning
+    const nw = w.cloneNode(true);
+    w.parentNode.replaceChild(nw, w);
+    nw.id = 'chart-wrap';
+    chartCanvas = nw.querySelector('#chart-canvas') || nw.appendChild(Object.assign(document.createElement('canvas'),{id:'chart-canvas'}));
+    chartCanvas.style.cssText = 'display:block;width:100%;height:100%';
+    const wrap = document.getElementById('chart-wrap');
+    wrap.style.cursor = 'crosshair';
+
+    // Wheel zoom
+    nw.addEventListener('wheel', e=>{
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 1.25 : 0.8;
+      const cx = e.offsetX / nw.clientWidth;
+      const newLen = Math.min(HISTORY_LEN, Math.max(10, viewLen*factor));
+      const pivot  = viewStart + cx*viewLen;
+      viewLen   = newLen;
+      viewStart = Math.max(0, Math.min(HISTORY_LEN-viewLen, pivot - cx*viewLen));
+    }, {passive:false});
+
+    // Drag pan
+    nw.addEventListener('mousedown', e=>{ isDragging=true; dragStartX=e.offsetX; dragViewStart=viewStart; nw.style.cursor='grabbing'; });
+    window.addEventListener('mousemove', e=>{
+      if(!isDragging) return;
+      const dx = (dragStartX - e.offsetX) / nw.clientWidth * viewLen;
+      viewStart = Math.max(0, Math.min(HISTORY_LEN-viewLen, dragViewStart+dx));
+    });
+    window.addEventListener('mouseup', ()=>{ isDragging=false; if(nw) nw.style.cursor='crosshair'; });
+
+    // Touch pan
+    let touchStartX=0, touchViewStart=0;
+    nw.addEventListener('touchstart', e=>{ touchStartX=e.touches[0].clientX; touchViewStart=viewStart; e.preventDefault(); },{passive:false});
+    nw.addEventListener('touchmove',  e=>{ 
+      const dx=(touchStartX-e.touches[0].clientX)/nw.clientWidth*viewLen;
+      viewStart=Math.max(0,Math.min(HISTORY_LEN-viewLen,touchViewStart+dx));
+      e.preventDefault();
+    },{passive:false});
+
+    // Touch pinch zoom
+    let pinchDist0=0;
+    nw.addEventListener('touchstart',e=>{ if(e.touches.length===2) pinchDist0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); },{passive:true});
+    nw.addEventListener('touchmove',e=>{
+      if(e.touches.length===2){
+        const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+        const factor=pinchDist0/d;
+        viewLen=Math.min(HISTORY_LEN,Math.max(10,viewLen*factor));
+        viewStart=Math.max(0,Math.min(HISTORY_LEN-viewLen,viewStart));
+        pinchDist0=d;
+      }
+    },{passive:true});
+
+    // Double-click reset
+    nw.addEventListener('dblclick', ()=>{ viewStart=Math.max(0,HISTORY_LEN-60); viewLen=60; });
+
+    // Tooltip
+    nw.addEventListener('mousemove', e=>{ tooltipX=e.offsetX; });
+    nw.addEventListener('mouseleave', ()=>{ tooltipX=-1; });
+
+    // Resize
+    window.addEventListener('resize', ()=>{
+      if(!chartOpen) return;
+      chartCanvas.width  = nw.clientWidth;
+      chartCanvas.height = nw.clientHeight;
+    });
+
+    chartCtx = chartCanvas.getContext('2d');
+    chartCanvas.width  = nw.clientWidth;
+    chartCanvas.height = nw.clientHeight;
+  }
+
+  function startChartLoop(){
+    if(chartRAF) cancelAnimationFrame(chartRAF);
+    function frame(){
+      if(!chartOpen){ return; }
+      drawChart();
+      chartRAF = requestAnimationFrame(frame);
+    }
+    frame();
+  }
+
+  function drawChart(){
+    if(!chartCtx||!chartCanvas) return;
+    const W = chartCanvas.width, H = chartCanvas.height;
+    const arr = history[chartKey];
+    if(!arr) return;
+    const PAD_L=52, PAD_R=16, PAD_T=20, PAD_B=36;
+    const plotW=W-PAD_L-PAD_R, plotH=H-PAD_T-PAD_B;
+    const x0=PAD_L, y0=PAD_T;
+
+    // Clear
+    chartCtx.clearRect(0,0,W,H);
+
+    // Background
+    chartCtx.fillStyle='rgba(6,14,26,1)';
+    chartCtx.fillRect(0,0,W,H);
+
+    const start = Math.max(0, Math.round(viewStart));
+    const end   = Math.min(HISTORY_LEN, Math.round(viewStart+viewLen));
+    const slice = arr.slice(start, end);
+    const n     = slice.length;
+    if(n < 2) return;
+
+    const dataMin = Math.min(...slice);
+    const dataMax = Math.max(...slice);
+    const padded  = (dataMax-dataMin)*0.12 || 5;
+    const yMin    = Math.max(chartMin, dataMin-padded);
+    const yMax    = Math.min(chartMax, dataMax+padded);
+
+    function toX(i){ return x0 + (i/(n-1))*plotW; }
+    function toY(v){ return y0+plotH - ((v-yMin)/(yMax-yMin))*plotH; }
+
+    // Grid lines
+    const nGridY=5;
+    chartCtx.strokeStyle='rgba(30,50,80,.5)';
+    chartCtx.lineWidth=0.5;
+    chartCtx.fillStyle='rgba(107,138,175,.55)';
+    chartCtx.font='11px Barlow Condensed,sans-serif';
+    chartCtx.textAlign='right';
+    for(let g=0;g<=nGridY;g++){
+      const v   = yMin + (yMax-yMin)*g/nGridY;
+      const gy  = toY(v);
+      chartCtx.beginPath(); chartCtx.moveTo(x0,gy); chartCtx.lineTo(x0+plotW,gy); chartCtx.stroke();
+      chartCtx.fillText(v.toFixed(chartUnit==='°C'?1:0)+' '+chartUnit, x0-4, gy+4);
+    }
+
+    // Time axis labels
+    chartCtx.textAlign='center';
+    chartCtx.fillStyle='rgba(107,138,175,.55)';
+    const nTickX=6;
+    for(let t=0;t<=nTickX;t++){
+      const idx   = Math.round(t/nTickX*(n-1));
+      const gx    = toX(idx);
+      const minsAgo = Math.round((HISTORY_LEN-1-(start+idx)));
+      const label = minsAgo===0 ? 'ahora' : '-'+minsAgo+'m';
+      chartCtx.fillText(label, gx, y0+plotH+22);
+      chartCtx.strokeStyle='rgba(30,50,80,.3)';
+      chartCtx.lineWidth=0.5;
+      chartCtx.beginPath(); chartCtx.moveTo(gx,y0); chartCtx.lineTo(gx,y0+plotH); chartCtx.stroke();
+    }
+
+    // Warning threshold line
+    let threshold = null;
+    if(chartUnit==='ppm') threshold=900;
+    if(threshold&&threshold>=yMin&&threshold<=yMax){
+      const ty=toY(threshold);
+      chartCtx.strokeStyle='rgba(249,115,22,.5)';
+      chartCtx.lineWidth=1.5;
+      chartCtx.setLineDash([6,4]);
+      chartCtx.beginPath(); chartCtx.moveTo(x0,ty); chartCtx.lineTo(x0+plotW,ty); chartCtx.stroke();
+      chartCtx.setLineDash([]);
+      chartCtx.fillStyle='rgba(249,115,22,.6)';
+      chartCtx.textAlign='left';
+      chartCtx.fillText('Límite '+threshold+' '+chartUnit, x0+4, ty-4);
+    }
+
+    // Area fill
+    const aGrad=chartCtx.createLinearGradient(0,y0,0,y0+plotH);
+    aGrad.addColorStop(0, chartColor+'35');
+    aGrad.addColorStop(1, chartColor+'05');
+    chartCtx.beginPath();
+    chartCtx.moveTo(toX(0), y0+plotH);
+    for(let i=0;i<n;i++) chartCtx.lineTo(toX(i), toY(slice[i]));
+    chartCtx.lineTo(toX(n-1), y0+plotH);
+    chartCtx.closePath();
+    chartCtx.fillStyle=aGrad;
+    chartCtx.fill();
+
+    // Line
+    chartCtx.beginPath();
+    chartCtx.strokeStyle=chartColor;
+    chartCtx.lineWidth=2.5;
+    chartCtx.lineJoin='round';
+    for(let i=0;i<n;i++){
+      i===0?chartCtx.moveTo(toX(i),toY(slice[i])):chartCtx.lineTo(toX(i),toY(slice[i]));
+    }
+    chartCtx.stroke();
+
+    // Last value dot
+    const lastX=toX(n-1), lastY=toY(slice[n-1]);
+    chartCtx.beginPath(); chartCtx.arc(lastX,lastY,5,0,Math.PI*2);
+    chartCtx.fillStyle=chartColor; chartCtx.fill();
+    // Pulse
+    const pulse=(Date.now()%1500)/1500;
+    chartCtx.beginPath(); chartCtx.arc(lastX,lastY,5+pulse*8,0,Math.PI*2);
+    chartCtx.strokeStyle=chartColor+Math.round((1-pulse)*120).toString(16).padStart(2,'0');
+    chartCtx.lineWidth=1.5; chartCtx.stroke();
+
+    // Tooltip
+    if(tooltipX>=x0 && tooltipX<=x0+plotW){
+      const ti=Math.round((tooltipX-x0)/plotW*(n-1));
+      const tv=slice[Math.max(0,Math.min(n-1,ti))];
+      const tx=toX(ti), ty2=toY(tv);
+      // Vertical line
+      chartCtx.strokeStyle='rgba(255,255,255,.2)'; chartCtx.lineWidth=1; chartCtx.setLineDash([4,4]);
+      chartCtx.beginPath(); chartCtx.moveTo(tx,y0); chartCtx.lineTo(tx,y0+plotH); chartCtx.stroke();
+      chartCtx.setLineDash([]);
+      // Dot
+      chartCtx.beginPath(); chartCtx.arc(tx,ty2,6,0,Math.PI*2);
+      chartCtx.fillStyle='#fff'; chartCtx.fill();
+      chartCtx.strokeStyle=chartColor; chartCtx.lineWidth=2; chartCtx.stroke();
+      // Label
+      const label=tv.toFixed(chartUnit==='°C'?1:0)+' '+chartUnit;
+      const bx=Math.min(tx+8, W-80), by=Math.max(ty2-28,y0+4);
+      chartCtx.fillStyle='rgba(9,16,28,.9)'; chartCtx.strokeStyle=chartColor; chartCtx.lineWidth=1;
+      chartCtx.beginPath(); chartCtx.roundRect(bx,by,70,22,3); chartCtx.fill(); chartCtx.stroke();
+      chartCtx.fillStyle='#fff'; chartCtx.font='bold 13px Barlow Condensed,sans-serif';
+      chartCtx.textAlign='center'; chartCtx.fillText(label,bx+35,by+15);
+      // Update current value display
+      const cvEl=document.getElementById('chart-current-val');
+      if(cvEl) cvEl.textContent=label;
+    } else {
+      const cv=slice[n-1];
+      const cvEl=document.getElementById('chart-current-val');
+      if(cvEl){ cvEl.textContent=cv.toFixed(chartUnit==='°C'?1:0)+' '+chartUnit; cvEl.style.color=chartColor; }
+    }
+  }
+
+  // ── Hook env data to push into history ──────────────────────
+  const _origUpdateEnv = window.updateEnvCard;
+  window._pushChartValue = pushValue;
+
+  // ── Make env chips clickable ─────────────────────────────────
+  // Called after buildEnvList renders the DOM
+  const _origBuildEnv = window.buildEnvList;
+  window.buildEnvList = function(k){
+    _origBuildEnv(k);
+    // After render, attach click handlers
+    setTimeout(()=>attachEnvClicks(k), 50);
+  };
+
+  function attachEnvClicks(k){
+    envData[k].forEach((e,i)=>{
+      const base={co2:{label:'CO₂',unit:'ppm',col:'#F97316',min:300,max:1500,base:750,range:400},
+                  temp:{label:'Temperatura',unit:'°C',col:'#4DAAFF',min:15,max:40,base:24,range:8},
+                  hum:{label:'Humedad',unit:'%',col:'#4DAAFF',min:30,max:85,base:60,range:20},
+                  iaq:{label:'IAQ',unit:'IAQ',col:'#00CC66',min:0,max:150,base:50,range:40}};
+      const mk=(field,cfg,stName)=>{
+        const el=document.getElementById(`e${field}-${k}${i}`);
+        if(!el) return;
+        el.style.cursor='pointer';
+        el.onclick=()=>openChart(`${k}_${i}_${field}`,`${cfg.label} · ${stName}`,cfg.unit,cfg.col,cfg.min,cfg.max,cfg.base,cfg.range);
+        el.title=`Ver historial de ${cfg.label}`;
+      };
+      mk('co2',base.co2,e.name);
+      mk('tmp',base.temp,e.name);
+      mk('hum',base.hum,e.name);
+      mk('iaq',base.iaq,e.name);
+    });
+  }
+
+  // Also attach to train speed clicks
+  const _origBuildTrains = window.buildTrainList;
+  window.buildTrainList = function(k){
+    _origBuildTrains(k);
+    setTimeout(()=>attachTrainClicks(k),50);
+  };
+
+  function attachTrainClicks(k){
+    fleet[k].forEach(f=>{
+      const el=document.getElementById('ts-'+f.id);
+      if(!el) return;
+      el.style.cursor='pointer';
+      el.title='Ver historial de velocidad';
+      el.onclick=()=>{
+        if(!history['spd_'+f.id]) history['spd_'+f.id]=seedHistory('spd_'+f.id,40,20,true);
+        openChart('spd_'+f.id,'Velocidad · Formación '+f.id,'km/h',LINES[k].color,0,80,40,20);
+      };
+    });
+  }
+
+  // Push speed values into history every second
+  setInterval(()=>{
+    if(!selLine) return;
+    fleet[selLine]&&fleet[selLine].forEach(f=>{
+      const key='spd_'+f.id;
+      if(history[key]) pushValue(key, f.speed);
+    });
+  },1000);
+
+  // Push env values
+  setInterval(()=>{
+    if(!selLine||!envData[selLine]) return;
+    envData[selLine].forEach((e,i)=>{
+      pushValue(`${selLine}_${i}_co2`, e.co2);
+      pushValue(`${selLine}_${i}_tmp`, e.temp);
+      pushValue(`${selLine}_${i}_hum`, e.hum);
+      pushValue(`${selLine}_${i}_iaq`, e.iaq);
+    });
+  },5500);
+
+  // Close on Escape
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChart(); });
+
+})();
 
 </script>
 <script>
@@ -1103,6 +1590,28 @@ window.addEventListener('resize', () => resizeMap());
 
 </script>
 
+
+<!-- TIME SERIES CHART MODAL -->
+<div id="chart-modal">
+  <div id="chart-header">
+    <div>
+      <div id="chart-title">CO₂ · Catedral</div>
+      <div id="chart-subtitle">Últimas 2 horas · Actualización en tiempo real</div>
+    </div>
+    <div id="chart-close" onclick="closeChart()">✕</div>
+  </div>
+  <div id="chart-wrap">
+    <canvas id="chart-canvas"></canvas>
+    <div id="chart-hint">🖱 Rueda: zoom · Arrastrar: desplazar · Doble click: resetear</div>
+  </div>
+  <div id="chart-toolbar">
+    <button class="chart-btn active" onclick="setRange(this,30)">30 min</button>
+    <button class="chart-btn" onclick="setRange(this,60)">1 hora</button>
+    <button class="chart-btn" onclick="setRange(this,120)">2 horas</button>
+    <button class="chart-btn" onclick="setRange(this,480)">8 horas</button>
+    <div id="chart-current-val"></div>
+  </div>
+</div>
 
 <a href="index.html" class="home-btn" title="Ir al inicio">🏠</a>
 </body>
