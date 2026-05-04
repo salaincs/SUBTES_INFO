@@ -5,67 +5,504 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#050C18">
   <title>SalaIncs · Centro de Control IoT</title>
-  <link rel="stylesheet" href="css/dashboard.css">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   variables.css — Design tokens & resets
+═══════════════════════════════════════════ */
+
+:root {
+  --orange:  #F97316;
+  --orange2: #EA6A0C;
+  --orange-light: #FFB060;
+  --blue:    #1A4A8A;
+  --accent:  #4DAAFF;
+  --accent2: #6ECCFF;
+  --green:   #00CC66;
+  --red:     #FF4444;
+  --bg:      #050C18;
+  --bg2:     #060E1A;
+  --bg3:     #0D1625;
+  --card:    #0A1420;
+  --border:  rgba(30,48,80,.8);
+  --text:    #FFFFFF;
+  --muted:   rgba(200,220,255,0.65);
+  --font-head: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Barlow', 'Arial', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-head);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Typography ─────────────────────────── */
+h1, h2, h3 {
+  font-family: var(--font-head);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  text-shadow: 0 2px 8px rgba(0,0,0,.7);
+}
+
+p, .body-text {
+  font-family: var(--font-body);
+  color: rgba(220,235,255,.92);
+  line-height: 1.75;
+  text-shadow: 0 1px 4px rgba(0,0,0,.6);
+}
+
+/* ── Utility ─────────────────────────────── */
+.orange  { color: var(--orange-light); }
+.accent  { color: var(--accent); }
+.muted   { color: var(--muted); }
+.green   { color: var(--green); }
+.red     { color: var(--red); }
+
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   dashboard.css — Control center styles
+═══════════════════════════════════════════ */
+
+
+/* ── Layout ────────────────────────────── */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Top bar ────────────────────────────── */
+#topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: rgba(4,10,22,.95);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+.tb-logo { display: flex; align-items: center; gap: 10px; }
+.tb-logo img { height: 32px; width: 32px; object-fit: contain; }
+.tb-name {
+  font-size: 18px; font-weight: 900;
+  letter-spacing: 3px; color: #fff;
+}
+.tb-name em { color: var(--orange); font-style: normal; }
+.tb-right { display: flex; align-items: center; gap: 20px; }
+.tb-status {
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; color: var(--green);
+}
+#clock {
+  font-size: 28px; font-weight: 900;
+  letter-spacing: 2px; color: var(--text);
+  min-width: 90px; text-align: right;
+}
+
+/* ── Line tabs ──────────────────────────── */
+#line-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 24px;
+  background: rgba(6,14,26,.9);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.line-tab {
+  font-family: var(--font-head);
+  font-size: 22px; font-weight: 900;
+  letter-spacing: 2px;
+  padding: 8px 22px;
+  border: 1px solid rgba(30,50,80,.8);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all .2s;
+  user-select: none;
+  flex-shrink: 0;
+}
+.line-tab:hover { filter: brightness(1.2); }
+.line-tab.active { color: #fff !important; box-shadow: 0 0 16px currentColor; }
+
+/* ── Main grid ──────────────────────────── */
+#main {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: 1fr auto;
+  flex: 1;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ── Map panel ──────────────────────────── */
+#map-panel {
+  position: relative;
+  background: rgba(6,14,26,.92);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#map-label {
+  padding: 10px 16px 6px;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  flex-shrink: 0;
+}
+#map-canvas {
+  flex: 1;
+  display: block;
+  width: 100%;
+}
+
+/* ── Metrics bar ────────────────────────── */
+#metrics-bar {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.metric {
+  padding: 12px 10px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  border-top: 2px solid var(--border);
+  background: rgba(6,14,26,.92);
+  transition: border-color .3s;
+}
+.metric:last-child { border-right: none; }
+.metric-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 4px;
+}
+.metric-value {
+  font-size: 34px; font-weight: 900;
+  line-height: 1;
+}
+.metric-unit { font-size: 12px; color: var(--muted); margin-left: 2px; }
+
+/* ── Right panel ────────────────────────── */
+#right-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Shared panel section */
+.panel-section {
+  background: rgba(6,14,26,.92);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel-section:last-child { border-bottom: none; flex: 1; }
+
+.panel-title {
+  padding: 10px 16px 8px;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.panel-body {
+  padding: 10px 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ── Train list ─────────────────────────── */
+.train-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(13,22,37,.8);
+  border: 1px solid rgba(30,48,80,.6);
+  border-left: 3px solid transparent;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all .2s;
+  border-radius: 2px;
+}
+.train-card:hover { border-color: var(--orange); background: rgba(249,115,22,.06); }
+.train-card.selected { border-left-color: var(--orange); background: rgba(249,115,22,.08); }
+.train-badge {
+  width: 40px; height: 40px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 900; color: #fff;
+  flex-shrink: 0;
+}
+.train-info { flex: 1; min-width: 0; }
+.train-station {
+  font-size: 15px; font-weight: 700;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.train-speed-row { display: flex; align-items: center; gap: 8px; }
+.train-speed {
+  font-size: 22px; font-weight: 900;
+  font-family: var(--font-head);
+}
+.speed-bar {
+  flex: 1; height: 5px;
+  background: rgba(30,48,80,.8);
+  border-radius: 3px; overflow: hidden;
+}
+.speed-fill { height: 100%; border-radius: 3px; transition: width .6s; }
+.train-dir { font-size: 14px; color: var(--muted); flex-shrink: 0; }
+
+/* ── Env sensors ────────────────────────── */
+.env-card {
+  background: rgba(13,22,37,.8);
+  border: 1px solid rgba(30,48,80,.6);
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 2px;
+}
+.env-name {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.env-values { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.env-chip {
+  font-size: 20px; font-weight: 700;
+  font-family: var(--font-head);
+}
+.env-chip span { font-size: 11px; color: var(--muted); margin-left: 2px; }
+.env-bar { height: 4px; background: rgba(30,48,80,.8); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+.env-bar-fill { height: 100%; border-radius: 2px; transition: width 1s, background 1s; }
+
+/* ── Event log ──────────────────────────── */
+.event-row {
+  font-size: 13px;
+  padding: 5px 8px;
+  border-left: 2px solid;
+  margin-bottom: 4px;
+  line-height: 1.4;
+  border-radius: 0 2px 2px 0;
+  animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+.event-type { font-weight: 700; margin-right: 4px; }
+.event-time { color: rgba(200,220,255,.45); margin-right: 4px; font-size: 11px; }
+.event-msg { color: rgba(240,244,250,.88); }
+
+/* ═══════════════════════════════════════════
+   MOBILE — full responsive redesign
+═══════════════════════════════════════════ */
+@media (max-width: 860px) {
+  html, body { overflow-y: auto; overflow-x: hidden; height: auto; }
+
+  #app {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  /* Topbar compact */
+  #topbar { padding: 10px 14px; }
+  .tb-name { font-size: 15px; }
+  #clock { font-size: 22px; min-width: 70px; }
+  .tb-status { font-size: 12px; }
+
+  /* Line tabs scroll */
+  #line-tabs { padding: 8px 12px; gap: 6px; }
+  .line-tab { font-size: 18px; padding: 6px 14px; }
+
+  /* Main: single column, natural height */
+  #main {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* MAP — hidden by default, shown via button */
+  #map-panel { display: none; }
+  #map-panel.mob-visible {
+    display: flex;
+    height: 60vw;
+    min-height: 200px;
+    max-height: 320px;
+    border-right: none;
+  }
+
+  /* Show map button */
+  #mob-map-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(77,170,255,.08);
+    border: 1px solid rgba(77,170,255,.3);
+    border-left: 3px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-head);
+    font-size: 15px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+  #mob-map-btn:active { background: rgba(77,170,255,.15); }
+
+  /* Metrics: 3 cols */
+  #metrics-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-right: none;
+  }
+  .metric { padding: 10px 6px; }
+  .metric-value { font-size: 26px; }
+  .metric-label { font-size: 9px; }
+
+  /* Right panel: natural flow */
+  #right-panel {
+    overflow: visible;
+    border-bottom: none;
+  }
+  .panel-section { overflow: visible; }
+  .panel-body { overflow: visible; max-height: none; }
+  .panel-title { font-size: 14px; }
+
+  /* Trains: horizontal scroll */
+  #trains-body {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 10px 10px 14px;
+  }
+  #trains-body .train-card {
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+    flex-shrink: 0;
+    padding: 10px 8px;
+    border-left: none;
+    border-top: 3px solid transparent;
+    margin-bottom: 0;
+  }
+  .train-info { width: 100%; text-align: center; }
+  .train-station { font-size: 12px; text-align: center; }
+  .speed-bar { width: 60px; }
+
+  /* Env: readable */
+  .env-chip { font-size: 18px; }
+  .env-name { font-size: 11px; }
+
+  /* Events: readable */
+  .event-row { font-size: 12px; }
+}
+
+@media (max-width: 520px) {
+  #clock { font-size: 18px; }
+  .line-tab { font-size: 16px; padding: 5px 10px; }
+  #metrics-bar { grid-template-columns: repeat(2, 1fr); }
+  .metric-value { font-size: 24px; }
+}
+
+  
+/* ── Home button ── */
+.home-btn{
+  position:fixed;bottom:18px;right:18px;z-index:80;
+  width:44px;height:44px;
+  background:rgba(9,15,30,.85);
+  border:1px solid rgba(30,48,80,.8);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;text-decoration:none;
+  font-size:18px;
+  transition:all .2s;
+  backdrop-filter:blur(6px);
+  opacity:.65;
+}
+.home-btn:hover{
+  background:var(--or,#F97316);
+  border-color:var(--or,#F97316);
+  opacity:1;
+  transform:scale(1.08);
+}
+
+</style>
 </head>
 <body>
-
 <div id="app">
 
-  <!-- ── TOP BAR ─────────────────────────── -->
+  <!-- TOP BAR -->
   <div id="topbar">
-    <div class="tb-logo">
-      <img src="assets/logo.png" alt="SalaIncs">
+    <a href="index.html" class="tb-logo" title="Inicio" style="text-decoration:none;">
+      <img src="logo.png" alt="SalaIncs">
       <div class="tb-name">Sala<em>Incs</em></div>
-    </div>
+    </a>
     <div class="tb-right">
       <div class="tb-status">● SISTEMA AUTÓNOMO · OPERATIVO</div>
       <div id="clock">--:--:--</div>
     </div>
   </div>
 
-  <!-- ── LINE TABS ────────────────────────── -->
+  <!-- LINE TABS -->
   <div id="line-tabs"></div>
 
-  <!-- MOBILE: show map button (hidden on desktop via CSS) -->
+  <!-- MOBILE MAP BUTTON -->
   <button id="mob-map-btn" onclick="toggleMobMap()">🗺 Ver mapa · Línea D</button>
 
-  <!-- ── MAIN GRID ────────────────────────── -->
+  <!-- MAIN GRID -->
   <div id="main">
 
     <!-- LEFT: Map + Metrics -->
     <div style="display:flex;flex-direction:column;overflow:hidden;">
-
-      <!-- Map -->
       <div id="map-panel">
         <div id="map-label">Línea D · Tiempo real</div>
         <canvas id="map-canvas"></canvas>
       </div>
-
-      <!-- Metrics bar -->
       <div id="metrics-bar"></div>
-
     </div>
 
     <!-- RIGHT: Trains · Env · Events -->
     <div id="right-panel">
 
-      <!-- Formations -->
       <div class="panel-section" style="flex-shrink:0">
         <div class="panel-title" style="color:var(--orange);border-bottom-color:var(--orange)">
-          ⚡ Formaciones
+          Formaciones
         </div>
         <div class="panel-body" id="trains-body"></div>
       </div>
 
-      <!-- Environmental -->
       <div class="panel-section" style="flex:1">
         <div class="panel-title" style="color:var(--accent);border-bottom-color:var(--accent)">
-          🌡 Ambiental · Estaciones
+          Ambiental · Estaciones
         </div>
         <div class="panel-body" id="env-body"></div>
       </div>
 
-      <!-- Events -->
       <div class="panel-section" style="flex-shrink:0">
         <div class="panel-title" style="color:var(--red);border-bottom-color:var(--red)">
           ⚡ Eventos
@@ -78,10 +515,595 @@
 
 </div>
 
-<!-- Scripts (order matters) -->
-<script src="js/dashboard/data.js"></script>
-<script src="js/dashboard/map.js"></script>
-<script src="js/dashboard/app.js"></script>
+<script>
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   dashboard/data.js — Lines, stations, fleet
+═══════════════════════════════════════════ */
 
+const LINES = {
+  A: {
+    color: '#00aedb', name: 'Línea A',
+    from: 'Plaza de Mayo', to: 'San Pedrito',
+    ests: ['Plaza de Mayo','Perú','Piedras','Lima','Sáenz Peña','Congreso',
+           'Pasco','Alberti','Plaza Miserere','Castro Barros','Río de Janeiro',
+           'Acoyte','Primera Junta','Carabobo','Puan','Flores','San Pedrito'],
+    salidas: ['Av. Rivadavia','Av. de Mayo'],
+    envStations: ['Plaza Miserere','Primera Junta','San Pedrito'],
+  },
+  B: {
+    color: '#ed1c24', name: 'Línea B',
+    from: 'L.N. Alem', to: 'J.M. de Rosas',
+    ests: ['L.N. Alem','Florida','Uruguay','C. Pellegrini','Callao',
+           'Pasteur/AMIA','Medrano','Ángel Gallardo','Malabia','Dorrego',
+           'Federico Lacroze','Tronador','Los Incas','J.M. de Rosas'],
+    salidas: ['Av. Corrientes'],
+    envStations: ['L.N. Alem','Ángel Gallardo','J.M. de Rosas'],
+  },
+  C: {
+    color: '#0072ce', name: 'Línea C',
+    from: 'Retiro', to: 'Constitución',
+    ests: ['Retiro','San Martín','Lavalle','Diagonal Norte',
+           'Av. de Mayo','Moreno','Independencia','San Juan','Constitución'],
+    salidas: ['Retiro','Constitución'],
+    envStations: ['Retiro','Av. de Mayo','Constitución'],
+  },
+  D: {
+    color: '#00884A', name: 'Línea D',
+    from: 'Catedral', to: 'Cong. Tucumán',
+    ests: ['Catedral','Tribunales','Callao','Pueyrredón','Agüero','Bulnes',
+           'Scalabrini Ortiz','Plaza Italia','Palermo','M. Carranza',
+           'Olleros','J. Hernández','Juramento','Cong. Tucumán'],
+    salidas: ['Av. Córdoba','Av. Santa Fe'],
+    envStations: ['Catedral','Plaza Italia','Cong. Tucumán'],
+  },
+  E: {
+    color: '#662c91', name: 'Línea E',
+    from: 'Bolívar', to: 'Plaza Virreyes',
+    ests: ['Bolívar','Belgrano','San José','Entre Ríos','Pichincha','Jujuy',
+           'Urquiza','Med. Milagrosa','J.M. Moreno','E. Mitre',
+           'Bonorino','Varela','Rivadavia','Plaza Virreyes'],
+    salidas: ['Av. Independencia'],
+    envStations: ['Bolívar','Jujuy','Plaza Virreyes'],
+  },
+  H: {
+    color: '#e8a800', name: 'Línea H',
+    from: 'Fac. Derecho', to: 'Hospitales',
+    ests: ['Fac. de Derecho','Las Heras','Santa Fe','Córdoba','Corrientes',
+           'Venezuela','Humberto 1°','Caseros','Parque Patricios','Hospitales'],
+    salidas: ['Av. Pueyrredón'],
+    envStations: ['Fac. de Derecho','Corrientes','Hospitales'],
+  },
+};
+
+const FLEET_INIT = {
+  A: [{id:'A1',pos:.06,dir:1},{id:'A2',pos:.52,dir:-1},{id:'A3',pos:.78,dir:1}],
+  B: [{id:'B1',pos:.14,dir:1},{id:'B2',pos:.60,dir:-1},{id:'B3',pos:.87,dir:1}],
+  C: [{id:'C1',pos:.10,dir:1},{id:'C2',pos:.65,dir:-1}],
+  D: [{id:'D1',pos:.05,dir:1},{id:'D2',pos:.42,dir:-1},{id:'D3',pos:.75,dir:1}],
+  E: [{id:'E1',pos:.18,dir:1},{id:'E2',pos:.58,dir:-1},{id:'E3',pos:.83,dir:1}],
+  H: [{id:'H1',pos:.08,dir:1},{id:'H2',pos:.70,dir:-1}],
+};
+
+const ALARMS = {
+  A: ['Vibración bogie A1 · Flores','CO₂ alto · Primera Junta','PIS actualizado · Miserere'],
+  B: ['Temp. túnel · Lacroze','Formación B2 · mantenimiento','Ocupación alta · C.Pellegrini'],
+  C: ['Conectividad restaurada · Retiro','Vibración C1 · Constitución','IA detecta desgaste · San Martín'],
+  D: ['Hombre en vía · Callao — RESUELTO','CO₂ elevado · Palermo','D3 llegando a Cong.Tucumán'],
+  E: ['Fuelle P.elevada · E2 · Jujuy','HR alta · Urquiza','PIS offline · Urquiza — recuperado'],
+  H: ['Anomalía rodamiento · H1','Ventilación activada · Hospitales','Sensor CO₂ · Corrientes OK'],
+};
+
+</script>
+<script>
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   dashboard/map.js — Canvas map renderer
+═══════════════════════════════════════════ */
+
+let mapCanvas, mapCtx;
+
+function initMap() {
+  mapCanvas = document.getElementById('map-canvas');
+  mapCtx    = mapCanvas.getContext('2d');
+  resizeMap();
+}
+
+function resizeMap() {
+  if (!mapCanvas) return;
+  const box = mapCanvas.parentElement.getBoundingClientRect();
+  mapCanvas.width  = box.width;
+  mapCanvas.height = box.height - 40; // minus label
+}
+
+function drawMap(lineKey, fleet) {
+  if (!mapCtx || !mapCanvas) return;
+  const W = mapCanvas.width, H = mapCanvas.height;
+  const L = LINES[lineKey];
+  const ests = L.ests;
+  const n = ests.length;
+  const col = L.color;
+  const PAD_L = 30, PAD_R = 30;
+  const trackY = H * 0.50;
+  const x0 = PAD_L, x1 = W - PAD_R;
+  const stGap = (x1 - x0) / (n - 1);
+
+  mapCtx.clearRect(0, 0, W, H);
+
+  // ── Sleepers ────────────────────────────
+  for (let i = 0; i < n - 1; i++) {
+    const step = Math.max(24, stGap / 3);
+    const sx = x0 + i * stGap, ex = x0 + (i + 1) * stGap;
+    for (let xx = sx + step / 2; xx < ex; xx += step) {
+      mapCtx.fillStyle = col + '1A';
+      mapCtx.fillRect(xx - 2, trackY - 10, 4, 20);
+    }
+  }
+
+  // ── Double rail ──────────────────────────
+  [-4, 4].forEach(dy => {
+    mapCtx.beginPath();
+    const g = mapCtx.createLinearGradient(x0, 0, x1, 0);
+    g.addColorStop(0,   col + '22');
+    g.addColorStop(0.5, col + 'CC');
+    g.addColorStop(1,   col + '22');
+    mapCtx.strokeStyle = g;
+    mapCtx.lineWidth = 3;
+    mapCtx.moveTo(x0, trackY + dy);
+    mapCtx.lineTo(x1, trackY + dy);
+    mapCtx.stroke();
+  });
+
+  // ── Stations ─────────────────────────────
+  const FT  = Math.max(12, Math.round(H * 0.048));
+  const FTT = Math.max(14, Math.round(H * 0.058));
+  const labelGap = Math.max(30, H * 0.10);
+
+  ests.forEach((name, i) => {
+    const sx  = x0 + i * stGap;
+    const isTerm = i === 0 || i === n - 1;
+    const above  = i % 2 === 0;
+    const R = isTerm ? 10 : 6;
+
+    // Glow for terminals
+    if (isTerm) {
+      mapCtx.beginPath();
+      mapCtx.arc(sx, trackY, 18, 0, Math.PI * 2);
+      mapCtx.fillStyle = col + '18';
+      mapCtx.fill();
+    }
+
+    // Dot
+    mapCtx.beginPath();
+    mapCtx.arc(sx, trackY, R, 0, Math.PI * 2);
+    mapCtx.fillStyle   = isTerm ? col : '#0D1827';
+    mapCtx.strokeStyle = col;
+    mapCtx.lineWidth   = isTerm ? 0 : 2.5;
+    mapCtx.fill();
+    if (!isTerm) mapCtx.stroke();
+
+    // Tick
+    const tickEnd = above
+      ? trackY - labelGap + FT
+      : trackY + labelGap - FT * 0.3;
+    mapCtx.strokeStyle = col + '55';
+    mapCtx.lineWidth = 1.5;
+    mapCtx.beginPath();
+    mapCtx.moveTo(sx, trackY + (above ? -R : R));
+    mapCtx.lineTo(sx, tickEnd);
+    mapCtx.stroke();
+
+    // Label
+    const labelY = above
+      ? trackY - labelGap
+      : trackY + labelGap + FT * 0.5;
+
+    mapCtx.save();
+    mapCtx.translate(sx, labelY);
+    mapCtx.font = `${isTerm ? 'bold ' : ''}${isTerm ? FTT : FT}px 'Barlow Condensed', Arial Narrow, sans-serif`;
+    mapCtx.fillStyle  = isTerm ? col : 'rgba(210,230,255,.75)';
+    mapCtx.textAlign  = 'center';
+    mapCtx.fillText(name, 0, 0);
+    mapCtx.restore();
+  });
+
+  // ── Trains ───────────────────────────────
+  const TW = Math.max(36, Math.round(W * 0.038));
+  const TH = Math.max(20, Math.round(H * 0.08));
+  const FTR = Math.max(13, Math.round(H * 0.050));
+
+  (fleet || []).forEach(f => {
+    const tx = x0 + f.pos * (x1 - x0);
+
+    // Speed label
+    const spdY = trackY + TH * 0.5 + FTR + 10;
+    mapCtx.font = `bold ${FTR * 0.9}px 'Barlow Condensed', sans-serif`;
+    mapCtx.fillStyle  = col + 'CC';
+    mapCtx.textAlign  = 'center';
+    mapCtx.fillText(Math.round(f.speed) + ' km/h', tx, spdY);
+
+    // Selected ring
+    if (f.selected) {
+      const pulse = (Date.now() % 1800) / 1800;
+      mapCtx.beginPath();
+      mapCtx.arc(tx, trackY, TW * 0.7 + pulse * 12, 0, Math.PI * 2);
+      mapCtx.strokeStyle = col + Math.round((1 - pulse) * 100).toString(16).padStart(2, '0');
+      mapCtx.lineWidth = 2;
+      mapCtx.stroke();
+    }
+
+    // Train body
+    mapCtx.fillStyle = col;
+    mapCtx.beginPath();
+    mapCtx.roundRect(tx - TW / 2, trackY - TH / 2, TW, TH, 4);
+    mapCtx.fill();
+
+    // Nose
+    const noseW = TW * 0.28;
+    if (f.dir > 0) {
+      mapCtx.beginPath();
+      mapCtx.moveTo(tx + TW / 2,        trackY - TH / 2);
+      mapCtx.lineTo(tx + TW / 2 + noseW, trackY);
+      mapCtx.lineTo(tx + TW / 2,        trackY + TH / 2);
+      mapCtx.fillStyle = col; mapCtx.fill();
+    } else {
+      mapCtx.beginPath();
+      mapCtx.moveTo(tx - TW / 2,        trackY - TH / 2);
+      mapCtx.lineTo(tx - TW / 2 - noseW, trackY);
+      mapCtx.lineTo(tx - TW / 2,        trackY + TH / 2);
+      mapCtx.fillStyle = col; mapCtx.fill();
+    }
+
+    // Headlight
+    const hlX = f.dir > 0 ? tx + TW / 2 + noseW - 4 : tx - TW / 2 - noseW + 4;
+    mapCtx.beginPath();
+    mapCtx.arc(hlX, trackY, 4, 0, Math.PI * 2);
+    mapCtx.fillStyle = '#FFE066';
+    mapCtx.fill();
+
+    // ID label
+    mapCtx.font     = `bold ${FTR}px 'Barlow Condensed', sans-serif`;
+    mapCtx.fillStyle = '#fff';
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText(f.id, tx, trackY + FTR * 0.36);
+
+    // Dwell indicator
+    if (f.dwell > 0) {
+      mapCtx.font     = `bold ${FTR * 0.85}px 'Barlow Condensed', sans-serif`;
+      mapCtx.fillStyle = '#FFE066';
+      mapCtx.fillText('⏱', tx, trackY - TH * 0.5 - 8);
+    }
+    mapCtx.textAlign = 'left';
+  });
+}
+
+</script>
+<script>
+/* ═══════════════════════════════════════════
+   SalaIncs · IoT Ferroviario
+   dashboard/app.js — Main controller
+═══════════════════════════════════════════ */
+
+/* ── State ──────────────────────────────── */
+let selLine   = 'D';
+let selTrain  = null;
+let fleet     = {};      // { lineKey: [{id,pos,dir,speed,dwell,dwellAt}] }
+let envData   = {};      // { lineKey: [{name,co2,temp,hum,iaq,trends...}] }
+let raf       = null;
+
+/* ── Init ───────────────────────────────── */
+function init() {
+  buildFleet();
+  buildEnvData();
+  buildLineTabs();
+  initMap();
+  selectLine(selLine);
+  startClock();
+  startEnvLoop();
+  startEventLoop();
+  requestAnimationFrame(loop);
+}
+
+/* ── Fleet ──────────────────────────────── */
+function buildFleet() {
+  Object.keys(LINES).forEach(k => {
+    const n = LINES[k].ests.length;
+    fleet[k] = FLEET_INIT[k]
+      .filter((_, i) => i < 2 || n > 10)
+      .map(cfg => ({
+        id: cfg.id, pos: cfg.pos, dir: cfg.dir,
+        speed: 25 + Math.random() * 22,
+        dwell: 0, dwellAt: -1,
+        color: LINES[k].color,
+        selected: false,
+      }));
+  });
+}
+
+function updateFleet() {
+  const k = selLine;
+  const L = LINES[k];
+  const n = L.ests.length;
+  fleet[k].forEach(f => {
+    if (f.dwell > 0) { f.dwell--; return; }
+    const step = (f.speed / 3600) * 0.016 / 2;
+    f.pos += f.dir * step;
+    // Dwell at stations
+    const si  = Math.round(f.pos * (n - 1));
+    const stp = si / (n - 1);
+    if (Math.abs(f.pos - stp) < 0.006 && si !== f.dwellAt) {
+      f.dwellAt = si;
+      f.dwell   = 70 + Math.floor(Math.random() * 80);
+      f.pos     = stp;
+      f.speed   = 0;
+    } else if (f.dwell === 0) {
+      f.speed += (Math.random() - .5) * 0.5;
+      f.speed  = Math.max(18, Math.min(68, f.speed));
+    }
+    if (f.pos >= 0.99) { f.pos = 0.99; f.dir = -1; f.dwellAt = -1; }
+    if (f.pos <= 0.01) { f.pos = 0.01; f.dir =  1; f.dwellAt = -1; }
+    updateTrainRow(f);
+  });
+}
+
+function updateTrainRow(f) {
+  const spdEl = document.getElementById('ts-' + f.id);
+  const barEl = document.getElementById('tb-' + f.id);
+  const stEl  = document.getElementById('tst-' + f.id);
+  const n     = LINES[selLine].ests.length;
+  const si    = Math.min(Math.round(f.pos * (n - 1)), n - 1);
+  if (spdEl) spdEl.textContent = (f.dwell > 0 ? 0 : Math.round(f.speed)) + ' km/h';
+  if (barEl) barEl.style.width = (f.speed / 80 * 100) + '%';
+  if (stEl)  stEl.textContent  = LINES[selLine].ests[si];
+}
+
+/* ── Env data ───────────────────────────── */
+function buildEnvData() {
+  Object.keys(LINES).forEach(k => {
+    envData[k] = LINES[k].envStations.map(name => ({
+      name, co2: 680 + Math.random() * 450,
+      temp: 20 + Math.random() * 12,
+      hum: 45 + Math.random() * 28,
+      iaq: 30 + Math.floor(Math.random() * 65),
+      co2t: 0, tempt: 0, humt: 0, iaqt: 0,
+    }));
+  });
+}
+
+function startEnvLoop() {
+  setInterval(() => {
+    Object.keys(LINES).forEach(k => {
+      envData[k].forEach((e, i) => {
+        e.co2t  = e.co2t  * 0.82 + (Math.random() - .5) * 3.5;
+        e.co2   = Math.max(500, Math.min(1400, e.co2 + e.co2t));
+        e.tempt = e.tempt * 0.88 + (Math.random() - .5) * 0.035;
+        e.temp  = Math.max(17, Math.min(36, e.temp + e.tempt));
+        e.humt  = e.humt  * 0.86 + (Math.random() - .5) * 0.12;
+        e.hum   = Math.max(38, Math.min(78, e.hum + e.humt));
+        e.iaqt  = e.iaqt  * 0.84 + (Math.random() - .5) * 0.7;
+        e.iaq   = Math.max(15, Math.min(130, e.iaq + e.iaqt));
+        if (k === selLine) updateEnvCard(k, i, e);
+      });
+    });
+    updateMetrics();
+  }, 5500);
+}
+
+function updateEnvCard(k, i, e) {
+  const co2El = document.getElementById('eco2-' + k + i);
+  const tmpEl = document.getElementById('etmp-' + k + i);
+  const humEl = document.getElementById('ehum-' + k + i);
+  const iaqEl = document.getElementById('eiaq-' + k + i);
+  const barEl = document.getElementById('ebar-' + k + i);
+  const over  = e.co2 > 900;
+  if (co2El) { co2El.textContent = Math.round(e.co2); co2El.style.color = over ? 'var(--orange)' : 'var(--green)'; }
+  if (tmpEl) tmpEl.textContent = e.temp.toFixed(1);
+  if (humEl) humEl.textContent = Math.round(e.hum);
+  if (iaqEl) { iaqEl.textContent = Math.round(e.iaq); iaqEl.style.color = e.iaq > 70 ? 'var(--orange)' : 'var(--green)'; }
+  if (barEl) { barEl.style.width = (e.co2 / 1500 * 100) + '%'; barEl.style.background = over ? 'var(--orange)' : 'var(--accent)'; }
+}
+
+/* ── Event log ──────────────────────────── */
+function startEventLoop() {
+  let li = 0;
+  pushEvent(li++ % 6);
+  setInterval(() => pushEvent(li++ % 6), 9500);
+}
+
+function pushEvent(lineIdx) {
+  const k    = Object.keys(LINES)[lineIdx];
+  const msgs = ALARMS[k];
+  const msg  = msgs[Math.floor(Math.random() * msgs.length)];
+  const types = [
+    {t:'INFO',c:'var(--accent)'},
+    {t:'WARN',c:'var(--orange)'},
+    {t:'OK',  c:'var(--green)'},
+    {t:'ALRM',c:'var(--red)'},
+  ];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const now  = new Date();
+  const ts   = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  const el   = document.getElementById('event-log');
+  if (!el) return;
+  const row = document.createElement('div');
+  row.className = 'event-row';
+  row.style.cssText = `border-color:${type.c};background:${type.c.replace('var(','rgba(').replace(')','')}11)`;
+  row.innerHTML = `<span class="event-type" style="color:${type.c}">[${type.t}]</span><span class="event-time">${ts}·L${k}</span><span class="event-msg">${msg}</span>`;
+  el.insertBefore(row, el.firstChild);
+  while (el.children.length > 8) el.removeChild(el.lastChild);
+}
+
+/* ── Clock ──────────────────────────────── */
+function startClock() {
+  function tick() {
+    const el = document.getElementById('clock');
+    if (!el) return;
+    const n = new Date();
+    el.textContent = `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+/* ── Line tabs ──────────────────────────── */
+function buildLineTabs() {
+  const el = document.getElementById('line-tabs');
+  el.innerHTML = Object.entries(LINES).map(([k, L]) =>
+    `<div class="line-tab" id="tab-${k}"
+       style="color:${L.color};border-color:${L.color}40;background:${L.color}12"
+       onclick="selectLine('${k}')">${k}</div>`
+  ).join('');
+}
+
+/* ── Select line ────────────────────────── */
+function selectLine(k) {
+  selLine  = k;
+  selTrain = null;
+  // Tabs
+  Object.keys(LINES).forEach(kk => {
+    const t = document.getElementById('tab-' + kk);
+    if (!t) return;
+    const L = LINES[kk];
+    if (kk === k) {
+      t.classList.add('active');
+      t.style.background   = L.color + '30';
+      t.style.borderColor  = L.color;
+    } else {
+      t.classList.remove('active');
+      t.style.background   = L.color + '12';
+      t.style.borderColor  = L.color + '40';
+    }
+  });
+  // Map label
+  const lbl = document.getElementById('map-label');
+  if (lbl) {
+    lbl.textContent = `${LINES[k].name} · ${LINES[k].from} ↔ ${LINES[k].to} · ${LINES[k].ests.length} estaciones · Tiempo real`;
+    lbl.style.color       = LINES[k].color;
+    lbl.style.borderColor = LINES[k].color;
+  }
+  // Mobile map button
+  const mobBtn = document.getElementById('mob-map-btn');
+  if (mobBtn) mobBtn.textContent = `🗺 Ver mapa · ${LINES[k].name}`;
+  // Rebuild panels
+  buildTrainList(k);
+  buildEnvList(k);
+  buildMetrics(k);
+  resizeMap();
+}
+
+/* ── Train list ─────────────────────────── */
+function buildTrainList(k) {
+  const el = document.getElementById('trains-body');
+  const L  = LINES[k];
+  if (!el) return;
+  el.innerHTML = fleet[k].map(f => {
+    const n  = L.ests.length;
+    const si = Math.min(Math.round(f.pos * (n - 1)), n - 1);
+    const st = L.ests[si];
+    return `
+    <div class="train-card${f.selected ? ' selected' : ''}" id="tc-${f.id}"
+         onclick="selectTrain('${f.id}')"
+         style="border-left-color:${f.selected ? L.color : 'transparent'}">
+      <div class="train-badge" style="background:${L.color}">${f.id}</div>
+      <div class="train-info">
+        <div class="train-station" id="tst-${f.id}">${st}</div>
+        <div class="train-speed-row">
+          <span class="train-speed" id="ts-${f.id}" style="color:${L.color}">${Math.round(f.speed)} km/h</span>
+          <div class="speed-bar"><div class="speed-fill" id="tb-${f.id}" style="background:${L.color};width:${f.speed/80*100}%"></div></div>
+          <span class="train-dir">${f.dir > 0 ? '→' : '←'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectTrain(id) {
+  selTrain = id;
+  fleet[selLine].forEach(f => {
+    f.selected = f.id === id;
+    const card = document.getElementById('tc-' + f.id);
+    if (card) {
+      card.classList.toggle('selected', f.selected);
+      card.style.borderLeftColor = f.selected ? LINES[selLine].color : 'transparent';
+    }
+  });
+}
+
+/* ── Env list ───────────────────────────── */
+function buildEnvList(k) {
+  const el = document.getElementById('env-body');
+  if (!el) return;
+  el.innerHTML = envData[k].map((e, i) => {
+    const over = e.co2 > 900;
+    return `
+    <div class="env-card" style="border-left-color:${over ? 'var(--orange)' : 'var(--accent)'}">
+      <div class="env-name">${e.name}</div>
+      <div class="env-values">
+        <div class="env-chip" style="color:${over?'var(--orange)':'var(--green)'}" id="eco2-${k}${i}">${Math.round(e.co2)}<span>ppm</span></div>
+        <div class="env-chip" style="color:var(--accent)" id="etmp-${k}${i}">${e.temp.toFixed(1)}<span>°C</span></div>
+        <div class="env-chip" style="color:var(--accent)" id="ehum-${k}${i}">${Math.round(e.hum)}<span>%</span></div>
+        <div class="env-chip" style="color:${e.iaq>70?'var(--orange)':'var(--green)'}" id="eiaq-${k}${i}">${Math.round(e.iaq)}<span>IAQ</span></div>
+      </div>
+      <div class="env-bar"><div class="env-bar-fill" id="ebar-${k}${i}" style="width:${e.co2/1500*100}%;background:${over?'var(--orange)':'var(--accent)'}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Metrics ────────────────────────────── */
+function buildMetrics(k) {
+  const L = LINES[k];
+  const trains = fleet[k];
+  const avgSpd = Math.round(trains.reduce((s, t) => s + t.speed, 0) / trains.length);
+  const env    = envData[k];
+  const avgCo2 = Math.round(env.reduce((s, e) => s + e.co2, 0) / env.length);
+  const avgTmp = (env.reduce((s, e) => s + e.temp, 0) / env.length).toFixed(1);
+  const items = [
+    { label:'Formaciones', value: trains.length,      unit:'',     color: L.color },
+    { label:'Vel. Promedio', value: avgSpd,            unit:'km/h', color: L.color },
+    { label:'CO₂ Prom.',     value: avgCo2,            unit:'ppm',  color: avgCo2>900?'var(--orange)':'var(--green)' },
+    { label:'Temp. Media',   value: avgTmp,            unit:'°C',   color: 'var(--accent)' },
+    { label:'Estaciones',    value: L.ests.length,     unit:'',     color: 'var(--accent)' },
+    { label:'Módulos OK',    value: '6/6',             unit:'',     color: 'var(--green)' },
+  ];
+  const el = document.getElementById('metrics-bar');
+  if (!el) return;
+  el.innerHTML = items.map(m =>
+    `<div class="metric" style="border-top-color:${m.color}">
+      <div class="metric-label">${m.label}</div>
+      <div><span class="metric-value" style="color:${m.color}">${m.value}</span><span class="metric-unit">${m.unit}</span></div>
+    </div>`
+  ).join('');
+}
+
+function updateMetrics() {
+  if (document.getElementById('metrics-bar')) buildMetrics(selLine);
+}
+
+/* ── Mobile map toggle ──────────────────── */
+function toggleMobMap() {
+  const panel = document.getElementById('map-panel');
+  if (!panel) return;
+  const visible = panel.classList.toggle('mob-visible');
+  const btn = document.getElementById('mob-map-btn');
+  if (btn) btn.textContent = visible
+    ? `✕ Cerrar mapa · ${LINES[selLine].name}`
+    : `🗺 Ver mapa · ${LINES[selLine].name}`;
+  if (visible) { resizeMap(); }
+}
+
+/* ── Main loop ──────────────────────────── */
+function loop() {
+  updateFleet();
+  drawMap(selLine, fleet[selLine]);
+  requestAnimationFrame(loop);
+}
+
+/* ── Start ──────────────────────────────── */
+window.addEventListener('load', init);
+window.addEventListener('resize', () => resizeMap());
+
+</script>
+
+
+<a href="index.html" class="home-btn" title="Ir al inicio">🏠</a>
 </body>
 </html>
